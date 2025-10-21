@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Pixels Controller - OBS Dock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dock-body">
+    <div class="dock-container">
+        <h2 class="status-header">Status: <span id="status" class="status-active">Active</span></h2>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="controls">Controls</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+
+        <div class="tab-content active" id="controls-tab">
+            <div class="control-group button-group-centered">
+                <button id="togglePlayBtn" class="btn btn-danger">⏸ Pause</button>
+                <button id="resetBtn" class="btn btn-warning">🔄 Reset</button>
+                <button id="toggleVisibilityBtn" class="btn btn-secondary">👁️ Hide</button>
+            </div>
+
+            <div class="control-group">
+                <label for="speedSlider">Speed: <span id="speedValue">2.0</span>x</label>
+                <div class="slider-container">
+                    <input type="range" id="speedSlider" min="0.5" max="20" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="scaleInput">Scale (width in px)</label>
+                <div class="scale-controls">
+                    <button id="scaleDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="scaleInput" class="scale-input" min="0" max="1500" value="150">
+                    <button id="scaleUpBtn" class="btn btn-scale">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Choose how colors change on bounce: Hue colors shifts hues, Simple color applies tinted overlays, Grey level varies brightness, Solid color uses preset colors (choose bright or dark variant based on your image), No change disables effects.">?</span>
+                <label for="colorModeSelect">Color Change Filter</label>
+                <select id="colorModeSelect" class="mode-select">
+                    <option value="hue">Hue colors</option>
+                    <option value="simple">Simple color</option>
+                    <option value="grey">Grey level</option>
+                    <option value="solid-bright">Solid color - on bright</option>
+                    <option value="solid-dark">Solid color - on dark</option>
+                    <option value="none">No change</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls saturation strength for Hue colors and Simple color filters. Higher values = more vibrant colors. Does not affect other filters.">?</span>
+                <label for="intensitySlider">Color Intensity: <span id="intensityValue">2.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="intensitySlider" min="0.5" max="10" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color.">?</span>
+                <label for="logoCountInput">Number of Logos</label>
+                <div class="scale-controls">
+                    <button id="logoCountDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="logoCountInput" class="scale-input" min="1" max="100" value="1">
+                    <button id="logoCountUpBtn" class="btn btn-scale">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Add images to /images folder as custom.png, custom.jpg, etc. Animated formats (GIF, WebP) are supported!">?</span>
+                <label for="imageSelect">Image</label>
+                <select id="imageSelect" class="image-select">
+                    <option value="default.png">default.png</option>
+                    <option value="custom.png">custom.png</option>
+                    <option value="custom.jpg">custom.jpg</option>
+                    <option value="custom.gif">custom.gif</option>
+                    <option value="custom.webp">custom.webp</option>
+                    <option value="custom.svg">custom.svg</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Smooth: soft interpolation for photos and complex images. Pixelated: crisp pixels for pixel art (no blur).">?</span>
+                <label for="imageRenderingSelect">Image Scaling</label>
+                <select id="imageRenderingSelect" class="mode-select">
+                    <option value="smooth">Smooth (Default)</option>
+                    <option value="pixelated">Pixelated (Pixel Art)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Time tolerance for corner detection. Allows horizontal and vertical bounces to be slightly out of sync and still trigger a corner effect. Higher values = more lenient. Independent of stream FPS.">?</span>
+                <label for="cornerToleranceInput">Corner Tolerance: <span id="cornerToleranceValue">0.10</span>s</label>
+                <div class="scale-controls">
+                    <button id="cornerToleranceDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="cornerToleranceInput" class="scale-input" min="0" max="1" step="0.01" value="0.10">
+                    <button id="cornerToleranceUpBtn" class="btn btn-scale">+</button>
+                </div>
+            </div>
+
+            <div class="control-group collapsible">
+                <div class="collapsible-header">
+                    <label>Corner Effects</label>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="control-group-inner">
+                        <span class="info-icon info-icon-top-right" data-tooltip="Choose an effect image to display when a logo hits a corner. Add custom effects to /corner_effects folder.">?</span>
+                        <label for="cornerEffectSelect">Effect Image</label>
+                        <select id="cornerEffectSelect" class="mode-select">
+                            <option value="none">None</option>
+                            <option value="default.png">default.png</option>
+                            <option value="custom.png">custom.png</option>
+                            <option value="custom.jpg">custom.jpg</option>
+                            <option value="custom.gif">custom.gif</option>
+                            <option value="custom.webp">custom.webp</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group-inner">
+                        <label for="cornerDurationInput">Effect Duration: <span id="cornerDurationValue">1.0</span>s</label>
+                        <div class="scale-controls">
+                            <button id="cornerDurationDownBtn" class="btn btn-scale">−</button>
+                            <input type="number" id="cornerDurationInput" class="scale-input" min="0.1" max="10" step="0.1" value="1.0">
+                            <button id="cornerDurationUpBtn" class="btn btn-scale">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group-inner">
+                        <label for="cornerFadeOutInput">Fade Out Duration: <span id="cornerFadeOutValue">0.3</span>s</label>
+                        <div class="scale-controls">
+                            <button id="cornerFadeOutDownBtn" class="btn btn-scale">−</button>
+                            <input type="number" id="cornerFadeOutInput" class="scale-input" min="0" max="10" step="0.1" value="0.3">
+                            <button id="cornerFadeOutUpBtn" class="btn btn-scale">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group-inner">
+                        <span class="info-icon info-icon-top-right" data-tooltip="For animated GIF/WebP files: choose how the animation behaves during the effect duration.">?</span>
+                        <label for="cornerAnimBehaviorSelect">Animated Behavior</label>
+                        <select id="cornerAnimBehaviorSelect" class="mode-select">
+                            <option value="play-once-no-fade">Play once without fade</option>
+                            <option value="play-once-fade">Play once with fade</option>
+                            <option value="repeat-no-fade">Repeat until duration (no fade)</option>
+                            <option value="repeat-fade">Repeat until duration (with fade)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group-inner">
+                        <label for="cornerScaleInput">Effect Scale: <span id="cornerScaleValue">x1.0</span></label>
+                        <div class="scale-controls">
+                            <button id="cornerScaleDownBtn" class="btn btn-scale">−</button>
+                            <input type="number" id="cornerScaleInput" class="scale-input" min="0.1" max="10" step="0.5" value="1.0">
+                            <button id="cornerScaleUpBtn" class="btn btn-scale">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group-inner">
+                        <span class="info-icon info-icon-top-right" data-tooltip="Display effects above or below the bouncing logos.">?</span>
+                        <label for="cornerZIndexSelect">Z-Index</label>
+                        <select id="cornerZIndexSelect" class="mode-select">
+                            <option value="above">Above logos</option>
+                            <option value="below">Below logos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="dock.js"></script>
+    <script>
+        // Gestion du collapse pour Corner Effects
+        document.addEventListener('DOMContentLoaded', () => {
+            const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+            
+            collapsibleHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const parent = header.parentElement;
+                    const content = parent.querySelector('.collapsible-content');
+                    const icon = header.querySelector('.collapse-icon');
+                    
+                    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                        content.style.maxHeight = '0px';
+                        content.style.opacity = '0';
+                        content.style.marginTop = '0';
+                        icon.textContent = '▶';
+                    } else {
+                        content.style.maxHeight = '1000px';
+                        content.style.opacity = '1';
+                        content.style.marginTop = '8px';
+                        icon.textContent = '▼';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
