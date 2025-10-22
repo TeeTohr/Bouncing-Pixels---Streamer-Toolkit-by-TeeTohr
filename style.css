@@ -42,7 +42,7 @@ body {
 
 .dock-container .status-header {
     text-align: center;
-    margin: 0 0 15px 0;
+    margin: 0 0 8px 0;
     padding: 8px;
     background-color: #2d2d2d;
     border-radius: 8px;
@@ -65,7 +65,7 @@ body {
     display: flex;
     gap: 5px;
     margin-bottom: 15px;
-    margin-top: 8px;
+    margin-top: 0;
     background-color: #2d2d2d;
     padding: 5px;
     border-radius: 8px;
@@ -127,7 +127,7 @@ body {
 
 .control-group {
     margin-bottom: 12px;
-    padding: 10px;
+    padding: 8px;
     background-color: #2d2d2d;
     border-radius: 8px;
     position: relative;
@@ -170,17 +170,107 @@ body {
     color: #cccccc;
 }
 
+/* Navigation vers Corner Effects */
+.corner-effects-nav {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.corner-effects-nav:hover {
+    background-color: #3a3a3a;
+}
+
+.corner-effects-nav label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.nav-arrow {
+    font-size: 24px;
+    color: #00d4ff;
+    font-weight: normal;
+}
+
+.corner-effects-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.corner-effects-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+}
+
+.corner-effects-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.corner-effects-content::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 4px;
+}
+
+.corner-effects-content::-webkit-scrollbar-thumb {
+    background: #00d4ff;
+    border-radius: 4px;
+}
+
+.corner-effects-content::-webkit-scrollbar-thumb:hover {
+    background: #00b8e6;
+}
+
+.corner-effects-header h3 {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+    color: #00d4ff;
+    font-size: 16px;
+}
+
+.btn-back {
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: normal;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background-color: #0056b3;
+    transform: translateX(-2px);
+}
+
 .info-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     margin-left: 5px;
     background-color: #00d4ff;
     color: #1e1e1e;
     border-radius: 50%;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     cursor: help;
     position: relative;
@@ -189,8 +279,8 @@ body {
 
 .info-icon-top-right {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
     margin: 0;
 }
 

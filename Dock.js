@@ -591,10 +591,10 @@ cornerScaleInput.addEventListener('input', (e) => {
 });
 
 cornerScaleDownBtn.addEventListener('mousedown', () => {
-    updateCornerScale(parseFloat(cornerScaleInput.value) - 0.5);
+    updateCornerScale(parseFloat(cornerScaleInput.value) - 0.1);
     cornerScaleHoldInterval = setTimeout(() => {
         cornerScaleHoldInterval = setInterval(() => {
-            updateCornerScale(parseFloat(cornerScaleInput.value) - 0.5);
+            updateCornerScale(parseFloat(cornerScaleInput.value) - 0.1);
         }, 50);
     }, 350);
 });
@@ -616,10 +616,10 @@ cornerScaleDownBtn.addEventListener('mouseleave', () => {
 });
 
 cornerScaleUpBtn.addEventListener('mousedown', () => {
-    updateCornerScale(parseFloat(cornerScaleInput.value) + 0.5);
+    updateCornerScale(parseFloat(cornerScaleInput.value) + 0.1);
     cornerScaleHoldInterval = setTimeout(() => {
         cornerScaleHoldInterval = setInterval(() => {
-            updateCornerScale(parseFloat(cornerScaleInput.value) + 0.5);
+            updateCornerScale(parseFloat(cornerScaleInput.value) + 0.1);
         }, 50);
     }, 350);
 });

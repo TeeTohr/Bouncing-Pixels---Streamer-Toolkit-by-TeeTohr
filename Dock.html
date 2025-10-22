@@ -103,99 +103,98 @@
                 </div>
             </div>
 
-            <div class="control-group collapsible">
-                <div class="collapsible-header">
-                    <label>Corner Effects</label>
-                    <span class="collapse-icon">▼</span>
+            <div class="control-group corner-effects-nav" id="cornerEffectsNavBtn">
+                <label>Corner Effects</label>
+                <span class="nav-arrow">→</span>
+            </div>
+        </div>
+
+        <div class="tab-content" id="corner-effects-tab">
+            <div class="corner-effects-header">
+                <button class="btn-back" id="cornerEffectsBackBtn">← Back</button>
+                <h3>Corner Effects</h3>
+            </div>
+
+            <div class="corner-effects-content">
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Choose an effect image to display when a logo hits a corner. Add custom effects to /corner_effects folder.">?</span>
+                <label for="cornerEffectSelect">Effect Image</label>
+                <select id="cornerEffectSelect" class="mode-select">
+                    <option value="none">None</option>
+                    <option value="default.png">default.png</option>
+                    <option value="custom.png">custom.png</option>
+                    <option value="custom.jpg">custom.jpg</option>
+                    <option value="custom.gif">custom.gif</option>
+                    <option value="custom.webp">custom.webp</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="cornerDurationInput">Effect Duration: <span id="cornerDurationValue">1.0</span>s</label>
+                <div class="scale-controls">
+                    <button id="cornerDurationDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="cornerDurationInput" class="scale-input" min="0.1" max="10" step="0.1" value="1.0">
+                    <button id="cornerDurationUpBtn" class="btn btn-scale">+</button>
                 </div>
-                <div class="collapsible-content">
-                    <div class="control-group-inner">
-                        <span class="info-icon info-icon-top-right" data-tooltip="Choose an effect image to display when a logo hits a corner. Add custom effects to /corner_effects folder.">?</span>
-                        <label for="cornerEffectSelect">Effect Image</label>
-                        <select id="cornerEffectSelect" class="mode-select">
-                            <option value="none">None</option>
-                            <option value="default.png">default.png</option>
-                            <option value="custom.png">custom.png</option>
-                            <option value="custom.jpg">custom.jpg</option>
-                            <option value="custom.gif">custom.gif</option>
-                            <option value="custom.webp">custom.webp</option>
-                        </select>
-                    </div>
+            </div>
 
-                    <div class="control-group-inner">
-                        <label for="cornerDurationInput">Effect Duration: <span id="cornerDurationValue">1.0</span>s</label>
-                        <div class="scale-controls">
-                            <button id="cornerDurationDownBtn" class="btn btn-scale">−</button>
-                            <input type="number" id="cornerDurationInput" class="scale-input" min="0.1" max="10" step="0.1" value="1.0">
-                            <button id="cornerDurationUpBtn" class="btn btn-scale">+</button>
-                        </div>
-                    </div>
-
-                    <div class="control-group-inner">
-                        <label for="cornerFadeOutInput">Fade Out Duration: <span id="cornerFadeOutValue">0.3</span>s</label>
-                        <div class="scale-controls">
-                            <button id="cornerFadeOutDownBtn" class="btn btn-scale">−</button>
-                            <input type="number" id="cornerFadeOutInput" class="scale-input" min="0" max="10" step="0.1" value="0.3">
-                            <button id="cornerFadeOutUpBtn" class="btn btn-scale">+</button>
-                        </div>
-                    </div>
-
-                    <div class="control-group-inner">
-                        <span class="info-icon info-icon-top-right" data-tooltip="For animated GIF/WebP files: choose how the animation behaves during the effect duration.">?</span>
-                        <label for="cornerAnimBehaviorSelect">Animated Behavior</label>
-                        <select id="cornerAnimBehaviorSelect" class="mode-select">
-                            <option value="play-once-no-fade">Play once without fade</option>
-                            <option value="play-once-fade">Play once with fade</option>
-                            <option value="repeat-no-fade">Repeat until duration (no fade)</option>
-                            <option value="repeat-fade">Repeat until duration (with fade)</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group-inner">
-                        <label for="cornerScaleInput">Effect Scale: <span id="cornerScaleValue">x1.0</span></label>
-                        <div class="scale-controls">
-                            <button id="cornerScaleDownBtn" class="btn btn-scale">−</button>
-                            <input type="number" id="cornerScaleInput" class="scale-input" min="0.1" max="10" step="0.5" value="1.0">
-                            <button id="cornerScaleUpBtn" class="btn btn-scale">+</button>
-                        </div>
-                    </div>
-
-                    <div class="control-group-inner">
-                        <span class="info-icon info-icon-top-right" data-tooltip="Display effects above or below the bouncing logos.">?</span>
-                        <label for="cornerZIndexSelect">Z-Index</label>
-                        <select id="cornerZIndexSelect" class="mode-select">
-                            <option value="above">Above logos</option>
-                            <option value="below">Below logos</option>
-                        </select>
-                    </div>
+            <div class="control-group">
+                <label for="cornerFadeOutInput">Fade Out Duration: <span id="cornerFadeOutValue">0.3</span>s</label>
+                <div class="scale-controls">
+                    <button id="cornerFadeOutDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="cornerFadeOutInput" class="scale-input" min="0" max="10" step="0.1" value="0.3">
+                    <button id="cornerFadeOutUpBtn" class="btn btn-scale">+</button>
                 </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="For animated GIF/WebP files: choose how the animation behaves during the effect duration.">?</span>
+                <label for="cornerAnimBehaviorSelect">Animated Behavior</label>
+                <select id="cornerAnimBehaviorSelect" class="mode-select">
+                    <option value="play-once-no-fade">Play once without fade</option>
+                    <option value="play-once-fade">Play once with fade</option>
+                    <option value="repeat-no-fade">Repeat until duration (no fade)</option>
+                    <option value="repeat-fade">Repeat until duration (with fade)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="cornerScaleInput">Effect Scale: <span id="cornerScaleValue">x1.0</span></label>
+                <div class="scale-controls">
+                    <button id="cornerScaleDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="cornerScaleInput" class="scale-input" min="0.1" max="10" step="0.1" value="1.0">
+                    <button id="cornerScaleUpBtn" class="btn btn-scale">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Display effects above or below the bouncing logos.">?</span>
+                <label for="cornerZIndexSelect">Z-Index</label>
+                <select id="cornerZIndexSelect" class="mode-select">
+                    <option value="above">Above logos</option>
+                    <option value="below">Below logos</option>
+                </select>
+            </div>
             </div>
         </div>
     </div>
     <script src="dock.js"></script>
     <script>
-        // Gestion du collapse pour Corner Effects
+        // Gestion de la navigation vers Corner Effects
         document.addEventListener('DOMContentLoaded', () => {
-            const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+            const cornerEffectsNavBtn = document.getElementById('cornerEffectsNavBtn');
+            const cornerEffectsBackBtn = document.getElementById('cornerEffectsBackBtn');
+            const settingsTab = document.getElementById('settings-tab');
+            const cornerEffectsTab = document.getElementById('corner-effects-tab');
             
-            collapsibleHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const parent = header.parentElement;
-                    const content = parent.querySelector('.collapsible-content');
-                    const icon = header.querySelector('.collapse-icon');
-                    
-                    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                        content.style.maxHeight = '0px';
-                        content.style.opacity = '0';
-                        content.style.marginTop = '0';
-                        icon.textContent = '▶';
-                    } else {
-                        content.style.maxHeight = '1000px';
-                        content.style.opacity = '1';
-                        content.style.marginTop = '8px';
-                        icon.textContent = '▼';
-                    }
-                });
+            cornerEffectsNavBtn.addEventListener('click', () => {
+                settingsTab.classList.remove('active');
+                cornerEffectsTab.classList.add('active');
+            });
+            
+            cornerEffectsBackBtn.addEventListener('click', () => {
+                cornerEffectsTab.classList.remove('active');
+                settingsTab.classList.add('active');
             });
         });
     </script>
