@@ -25,33 +25,13 @@ Extract all files to a folder (e.g., C:\OBS\SETUP\)
 
 
 
-## Using Custom Images
+## Using Custom Images / Corner Effects
 
-1. Place your images in the /images folder
+1. Place your images in the /images and/or /corner_effects folder
 2. Name them as: custom.png, custom.jpg, custom.gif, custom.webp, or custom.svg
-3. Select them from the Image dropdown in the Settings tab
+3. Select them from the Image/Corner Effects dropdown in the Settings tab
 4. Supported formats: PNG, JPG, GIF (animated), WebP (animated), SVG
 
-## Controls
-
-### Controls Tab:
-- Pause/Start: Toggle animation
-- Reset: Reset position and randomize direction
-- Hide/Show: Toggle visibility
-- Speed: Adjust movement speed
-- Scale: Change image size in pixels
-
-### Settings Tab:
-- Color Change Filter: Choose how colors change on bounce
-  - Hue colors: Shifts through color spectrum
-  - Simple color: Applies tinted overlays
-  - Grey level: Varies brightness in grayscale
-  - Solid color: Uses 15 preset colors (primaries, secondaries, etc.)
-  - No change: Disables color effects
-- Color Intensity: Controls saturation
-- Number of logos: How many of the same images to display
-- Image: Select which image to display
-- Image Scaling: Choose an upscaling algorithm, useful to avoid blurring pixel art for example
 
 
 
@@ -88,6 +68,11 @@ Settings not persisting:
 - The DVD logo is copyrighted due to being a trademark owned by DVD FLLC, as such it isn't included in this tool
 - This tool is to be used for entertainment only, each user's choice of picture is their own responsibility
 - The logo moves once per frame, so the speed of logo is framerate dependant
+- A quick explanation on version numbers : W.X.Y.Z
+	- W : Major version (big revamp or features)
+	- X : Minor version (small revamp or features)
+	- Y : Bugfix version
+	- Z : Misc changes (labels, etc)
 
 - If you happen to use this in your streams or video please send me a clip on X/Twitter at @TeeTohr (in dms is fine :) ) 
 
