@@ -77,3 +77,7 @@ Settings not persisting:
 - If you happen to use this in your streams or video please send me a clip on X/Twitter at @TeeTohr (in dms is fine :) ) 
 
 Enjoy !
+
+
+
+AI Disclaimer : AI was used as a coding assistant / code generator for this toolkit. However all visual and audio assets bundled with the toolkit were made by hand which is why they are VERY simple I am not an artist at all !
