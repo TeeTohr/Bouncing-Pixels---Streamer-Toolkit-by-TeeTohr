@@ -16,10 +16,8 @@ const logoCountInput = document.getElementById('logoCountInput');
 const logoCountDownBtn = document.getElementById('logoCountDownBtn');
 const logoCountUpBtn = document.getElementById('logoCountUpBtn');
 const imageRenderingSelect = document.getElementById('imageRenderingSelect');
-const cornerToleranceInput = document.getElementById('cornerToleranceInput');
+const cornerToleranceSlider = document.getElementById('cornerToleranceSlider');
 const cornerToleranceValue = document.getElementById('cornerToleranceValue');
-const cornerToleranceDownBtn = document.getElementById('cornerToleranceDownBtn');
-const cornerToleranceUpBtn = document.getElementById('cornerToleranceUpBtn');
 
 // Éléments Corner Effects
 const cornerEffectSelect = document.getElementById('cornerEffectSelect');
@@ -37,6 +35,7 @@ const cornerScaleValue = document.getElementById('cornerScaleValue');
 const cornerScaleDownBtn = document.getElementById('cornerScaleDownBtn');
 const cornerScaleUpBtn = document.getElementById('cornerScaleUpBtn');
 const cornerZIndexSelect = document.getElementById('cornerZIndexSelect');
+const testEffectBtn = document.getElementById('testEffectBtn');
 
 let isPlaying = true;
 let isVisible = true;
@@ -47,7 +46,6 @@ let activeTab = 'controls';
 let colorIntensity = 2.0;
 let logoCount = 1;
 let imageRendering = 'smooth';
-let cornerToleranceHoldInterval = null;
 let cornerDurationHoldInterval = null;
 let cornerFadeOutHoldInterval = null;
 let cornerScaleHoldInterval = null;
@@ -212,7 +210,7 @@ function loadPersistentData() {
     const savedCornerTolerance = localStorage.getItem('bpix-cornerTolerance');
     if (savedCornerTolerance) {
         const tolerance = parseFloat(savedCornerTolerance);
-        cornerToleranceInput.value = tolerance;
+        cornerToleranceSlider.value = tolerance;
         cornerToleranceValue.textContent = tolerance.toFixed(2);
         sendCommand('cornerTolerance', tolerance);
         console.log('Corner tolerance chargé:', tolerance);
@@ -355,69 +353,11 @@ imageRenderingSelect.addEventListener('change', (e) => {
     savePersistentData('bpix-imageRendering', imageRendering);
 });
 
-// Gestion Corner Tolerance
-function updateCornerTolerance(newTolerance) {
-    newTolerance = Math.max(0, Math.min(1, newTolerance));
-    newTolerance = Math.round(newTolerance * 100) / 100; // Arrondir à 0.01
-    cornerToleranceInput.value = newTolerance;
-    cornerToleranceValue.textContent = newTolerance.toFixed(2);
-    sendCommand('cornerTolerance', newTolerance);
-    savePersistentData('bpix-cornerTolerance', newTolerance.toString());
-}
-
-cornerToleranceInput.addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value) || 0;
-    updateCornerTolerance(value);
-});
-
-cornerToleranceDownBtn.addEventListener('mousedown', () => {
-    updateCornerTolerance(parseFloat(cornerToleranceInput.value) - 0.01);
-    cornerToleranceHoldInterval = setTimeout(() => {
-        cornerToleranceHoldInterval = setInterval(() => {
-            updateCornerTolerance(parseFloat(cornerToleranceInput.value) - 0.01);
-        }, 50);
-    }, 350);
-});
-
-cornerToleranceDownBtn.addEventListener('mouseup', () => {
-    if (cornerToleranceHoldInterval) {
-        clearTimeout(cornerToleranceHoldInterval);
-        clearInterval(cornerToleranceHoldInterval);
-        cornerToleranceHoldInterval = null;
-    }
-});
-
-cornerToleranceDownBtn.addEventListener('mouseleave', () => {
-    if (cornerToleranceHoldInterval) {
-        clearTimeout(cornerToleranceHoldInterval);
-        clearInterval(cornerToleranceHoldInterval);
-        cornerToleranceHoldInterval = null;
-    }
-});
-
-cornerToleranceUpBtn.addEventListener('mousedown', () => {
-    updateCornerTolerance(parseFloat(cornerToleranceInput.value) + 0.01);
-    cornerToleranceHoldInterval = setTimeout(() => {
-        cornerToleranceHoldInterval = setInterval(() => {
-            updateCornerTolerance(parseFloat(cornerToleranceInput.value) + 0.01);
-        }, 50);
-    }, 350);
-});
-
-cornerToleranceUpBtn.addEventListener('mouseup', () => {
-    if (cornerToleranceHoldInterval) {
-        clearTimeout(cornerToleranceHoldInterval);
-        clearInterval(cornerToleranceHoldInterval);
-        cornerToleranceHoldInterval = null;
-    }
-});
-
-cornerToleranceUpBtn.addEventListener('mouseleave', () => {
-    if (cornerToleranceHoldInterval) {
-        clearTimeout(cornerToleranceHoldInterval);
-        clearInterval(cornerToleranceHoldInterval);
-        cornerToleranceHoldInterval = null;
-    }
+cornerToleranceSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    cornerToleranceValue.textContent = value.toFixed(2);
+    sendCommand('cornerTolerance', value);
+    savePersistentData('bpix-cornerTolerance', value.toString());
 });
 
 // Gestion des Corner Effects
@@ -437,6 +377,14 @@ cornerZIndexSelect.addEventListener('change', (e) => {
     const zIndex = e.target.value;
     sendCommand('cornerZIndex', zIndex);
     savePersistentData('bpix-cornerZIndex', zIndex);
+});
+
+// Gestion du bouton Test Effect
+testEffectBtn.addEventListener('click', () => {
+    const corners = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const randomCorner = corners[Math.floor(Math.random() * corners.length)];
+    sendCommand('testCornerEffect', randomCorner);
+    console.log('Test effect déclenché:', randomCorner);
 });
 
 // Gestion Corner Duration

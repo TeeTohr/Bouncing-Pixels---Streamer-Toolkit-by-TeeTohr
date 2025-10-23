@@ -461,6 +461,12 @@ function processCommand(action, value) {
         case 'cornerZIndex':
             updateCornerEffectSettings({ cornerZIndex: value });
             break;
+        case 'testCornerEffect':
+            if (value) {
+                sendLog('🎬 Test effet au coin:', value);
+                createCornerEffect(value, container, imageRendering);
+            }
+            break;
     }
 }
 

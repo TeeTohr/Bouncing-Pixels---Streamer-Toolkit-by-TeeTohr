@@ -133,6 +133,21 @@ body {
     position: relative;
 }
 
+.control-group-stacked {
+    /* overflow: hidden removed to allow tooltips to display properly */
+    padding: 0;
+
+}
+
+.control-group-segment {
+    padding: 8px;
+    position: relative;
+}
+
+.control-group-segment:not(:last-child) {
+    border-bottom: 1px solid #1e1e1e;
+}
+
 .control-group.button-group-centered {
     display: flex;
     justify-content: center;
@@ -190,10 +205,23 @@ body {
     font-weight: bold;
 }
 
-.nav-arrow {
-    font-size: 24px;
-    color: #00d4ff;
-    font-weight: normal;
+.nav-icon, .back-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.nav-icon img, .back-icon img {
+    width: 19px;
+    height: 19px;
+    display: block;
+}
+
+.back-icon img {
+    transform: scaleX(-1);
 }
 
 .corner-effects-header {
@@ -250,15 +278,14 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: normal;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.btn-back:hover {
-    background-color: #0056b3;
-    transform: translateX(-2px);
-}
 
 .info-icon {
     display: inline-flex;
@@ -298,7 +325,7 @@ body {
     font-weight: normal;
     white-space: normal;
     width: 220px;
-    z-index: 1000;
+    z-index: 10000;
     line-height: 1.4;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     pointer-events: none;
