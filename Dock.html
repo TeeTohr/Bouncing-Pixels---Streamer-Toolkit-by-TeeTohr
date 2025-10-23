@@ -5,21 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bouncing Pixels Controller - OBS Dock</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="lib/popup/popup.css">
 </head>
 <body class="dock-body">
     <div class="dock-container">
-        <h2 class="status-header" id="statusHeader">Status: <span id="status" class="status-active">Active</span></h2>
-        
-        <div class="tabs" id="mainTabs">
-            <button class="tab-btn active" data-tab="controls">Controls</button>
-            <button class="tab-btn" data-tab="settings">Settings</button>
+        <!-- Partie fixe principale : Tabs Controls/Settings -->
+        <div class="tab-header" id="mainTabsHeader">
+            <div class="tabs" id="mainTabs">
+                <button class="tab-btn active" data-tab="controls">Controls</button>
+                <button class="tab-btn" data-tab="settings">Settings</button>
+            </div>
         </div>
 
+        <!-- Contenu des onglets principaux -->
         <div class="tab-content active" id="controls-tab">
+            <h2 class="status-header" id="statusHeader">Status: <span id="status" class="status-active">Active</span></h2>
+            
             <div class="control-group button-group-centered">
-                <button id="togglePlayBtn" class="btn btn-danger">⏸ Pause</button>
-                <button id="resetBtn" class="btn btn-warning">🔄 Reset</button>
-                <button id="toggleVisibilityBtn" class="btn btn-secondary">👁️ Hide</button>
+                <button id="togglePlayBtn" class="btn btn-danger">Pause</button>
+                <button id="resetBtn" class="btn btn-warning">Reset</button>
+                <button id="toggleVisibilityBtn" class="btn btn-secondary">Hide</button>
             </div>
 
             <div class="control-group">
@@ -28,41 +33,19 @@
                     <input type="range" id="speedSlider" min="0.5" max="20" step="0.1" value="2">
                 </div>
             </div>
-
-            <div class="control-group">
-                <label for="scaleInput">Scale (width in px)</label>
-                <div class="scale-controls">
-                    <button id="scaleDownBtn" class="btn btn-scale">−</button>
-                    <input type="number" id="scaleInput" class="scale-input" min="0" max="1500" value="150">
-                    <button id="scaleUpBtn" class="btn btn-scale">+</button>
-                </div>
-            </div>
         </div>
 
         <div class="tab-content" id="settings-tab">
-            <div class="control-group control-group-stacked">
-                <div class="control-group-segment">
-                    <span class="info-icon info-icon-top-right" data-tooltip="Choose how colors change on bounce: Hue colors shifts hues, Simple color applies tinted overlays, Grey level varies brightness, Solid color uses preset colors (choose bright or dark variant based on your image), No change disables effects.">?</span>
-                    <label for="colorModeSelect">Color Change Filter</label>
-                    <select id="colorModeSelect" class="mode-select">
-                        <option value="hue">Hue colors</option>
-                        <option value="simple">Simple color</option>
-                        <option value="grey">Grey level</option>
-                        <option value="solid-bright">Solid color - on bright</option>
-                        <option value="solid-dark">Solid color - on dark</option>
-                        <option value="none">No change</option>
-                    </select>
-                </div>
-
-                <div class="control-group-segment">
-                    <span class="info-icon info-icon-top-right" data-tooltip="Controls saturation strength for Hue colors and Simple color filters. Higher values = more vibrant colors. Does not affect other filters.">?</span>
-                    <label for="intensitySlider">Color Intensity: <span id="intensityValue">2.0</span></label>
-                    <div class="slider-container">
-                        <input type="range" id="intensitySlider" min="0.5" max="10" step="0.1" value="2">
-                    </div>
+            <!-- Corner Tolerance -->
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Time tolerance for corner detection. Allows horizontal and vertical bounces to be slightly out of sync and still trigger a corner effect. Higher values = more lenient. Independent of stream FPS.">?</span>
+                <label for="cornerToleranceSlider">Corner Tolerance: <span id="cornerToleranceValue">0.10</span>s</label>
+                <div class="slider-container">
+                    <input type="range" id="cornerToleranceSlider" min="0" max="1" step="0.01" value="0.10">
                 </div>
             </div>
 
+            <!-- Number of Logos -->
             <div class="control-group">
                 <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color.">?</span>
                 <label for="logoCountInput">Number of Logos</label>
@@ -73,54 +56,115 @@
                 </div>
             </div>
 
-            <div class="control-group control-group-stacked">
-                <div class="control-group-segment">
-                    <span class="info-icon info-icon-top-right" data-tooltip="Add images to /images folder as custom.png, custom.jpg, etc. Supported formats: PNG, JPG, GIF, WEBP, SVG">?</span>
-                    <label for="imageSelect">Image</label>
-                    <select id="imageSelect" class="image-select">
-                        <option value="default.png">default.png</option>
-                        <option value="custom.png">custom.png</option>
-                        <option value="custom.jpg">custom.jpg</option>
-                        <option value="custom.gif">custom.gif</option>
-                        <option value="custom.webp">custom.webp</option>
-                        <option value="custom.svg">custom.svg</option>
-                    </select>
-                </div>
-
-                <div class="control-group-segment">
-                    <span class="info-icon info-icon-top-right" data-tooltip="Smooth: soft interpolation for photos and complex images. Pixelated: crisp pixels for pixel art (no blur).">?</span>
-                    <label for="imageRenderingSelect">Image Scaling</label>
-                    <select id="imageRenderingSelect" class="mode-select">
-                        <option value="smooth">Smooth (Default)</option>
-                        <option value="pixelated">Pixelated (Pixel Art)</option>
-                    </select>
-                </div>
+            <!-- Navigation vers sous-menu Image -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="image-settings">
+                <label>Image</label>
+                <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
 
-            <div class="control-group">
-                <span class="info-icon info-icon-top-right" data-tooltip="Time tolerance for corner detection. Allows horizontal and vertical bounces to be slightly out of sync and still trigger a corner effect. Higher values = more lenient. Independent of stream FPS.">?</span>
-                <label for="cornerToleranceSlider">Corner Tolerance: <span id="cornerToleranceValue">0.10</span>s</label>
-                <div class="slider-container">
-                    <input type="range" id="cornerToleranceSlider" min="0" max="1" step="0.01" value="0.10">
-                </div>
+            <!-- Navigation vers sous-menu Color Change on Bounce -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="color-settings">
+                <label>Color Change on Bounce</label>
+                <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
 
-            <div class="control-group corner-effects-nav" id="cornerEffectsNavBtn">
+            <!-- Navigation vers sous-menu Corner Effects -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="corner-effects">
                 <label>Corner Effects</label>
                 <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
         </div>
 
-        <div class="tab-content" id="corner-effects-tab">
+        <!-- Sous-menu Image Settings -->
+        <div class="tab-header" data-submenu-header="image-settings" style="display: none;">
             <div class="corner-effects-header">
-                <button class="btn-back" id="cornerEffectsBackBtn">
+                <button class="btn-back" data-submenu-back>
+                    <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
+                    <span>Back</span>
+                </button>
+                <h3>Image</h3>
+            </div>
+        </div>
+
+        <div class="tab-content" data-submenu-content="image-settings">
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Add images to /images folder as custom.png, custom.jpg, etc. Supported formats: PNG, JPG, GIF, WEBP, SVG">?</span>
+                <label for="imageSelect">Image</label>
+                <select id="imageSelect" class="image-select">
+                    <option value="default.png">default.png</option>
+                    <option value="custom.png">custom.png</option>
+                    <option value="custom.jpg">custom.jpg</option>
+                    <option value="custom.gif">custom.gif</option>
+                    <option value="custom.webp">custom.webp</option>
+                    <option value="custom.svg">custom.svg</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="scaleInput">Scale (width in px)</label>
+                <div class="scale-controls">
+                    <button id="scaleDownBtn" class="btn btn-scale">−</button>
+                    <input type="number" id="scaleInput" class="scale-input" min="0" max="1500" value="150">
+                    <button id="scaleUpBtn" class="btn btn-scale">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Smooth: soft interpolation for photos and complex images. Pixelated: crisp pixels for pixel art (no blur).">?</span>
+                <label for="imageRenderingSelect">Image Scaling</label>
+                <select id="imageRenderingSelect" class="mode-select">
+                    <option value="smooth">Smooth (Default)</option>
+                    <option value="pixelated">Pixelated (Pixel Art)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Sous-menu Color Change on Bounce -->
+        <div class="tab-header" data-submenu-header="color-settings" style="display: none;">
+            <div class="corner-effects-header">
+                <button class="btn-back" data-submenu-back>
+                    <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
+                    <span>Back</span>
+                </button>
+                <h3>Color Change on Bounce</h3>
+            </div>
+        </div>
+
+        <div class="tab-content" data-submenu-content="color-settings">
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Choose how colors change on bounce: Hue colors shifts hues, Simple color applies tinted overlays, Grey level varies brightness, Solid color uses preset colors (choose bright or dark variant based on your image), No change disables effects.">?</span>
+                <label for="colorModeSelect">Color Change Filter</label>
+                <select id="colorModeSelect" class="mode-select">
+                    <option value="hue">Hue colors</option>
+                    <option value="simple">Simple color</option>
+                    <option value="grey">Grey level</option>
+                    <option value="solid-bright">Solid color - on bright</option>
+                    <option value="solid-dark">Solid color - on dark</option>
+                    <option value="none">No change</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls saturation strength for Hue colors and Simple color filters. Higher values = more vibrant colors. Does not affect other filters.">?</span>
+                <label for="intensitySlider">Color Intensity: <span id="intensityValue">2.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="intensitySlider" min="0.5" max="10" step="0.1" value="2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sous-menu Corner Effects -->
+        <div class="tab-header" id="cornerEffectsHeader" data-submenu-header="corner-effects" style="display: none;">
+            <div class="corner-effects-header">
+                <button class="btn-back" id="cornerEffectsBackBtn" data-submenu-back>
                     <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
                     <span>Back</span>
                 </button>
                 <h3>Corner Effects</h3>
             </div>
+        </div>
 
-            <div class="corner-effects-content">
+        <div class="tab-content" id="corner-effects-tab" data-submenu-content="corner-effects">
             <div class="control-group">
                 <button id="testEffectBtn" class="btn btn-primary">Test Effect</button>
             </div>
@@ -185,38 +229,12 @@
                     <option value="below">Below logos</option>
                 </select>
             </div>
-            </div>
         </div>
+
+        <!-- Popup système - Conteneur pour file d'attente -->
+        <div class="popup-container-wrapper" id="popup-container"></div>
     </div>
+    <script src="lib/popup/popup.js"></script>
     <script src="dock.js"></script>
-    <script>
-        // Gestion de la navigation vers Corner Effects
-        document.addEventListener('DOMContentLoaded', () => {
-            const cornerEffectsNavBtn = document.getElementById('cornerEffectsNavBtn');
-            const cornerEffectsBackBtn = document.getElementById('cornerEffectsBackBtn');
-            const settingsTab = document.getElementById('settings-tab');
-            const cornerEffectsTab = document.getElementById('corner-effects-tab');
-            const statusHeader = document.getElementById('statusHeader');
-            const mainTabs = document.getElementById('mainTabs');
-            
-            cornerEffectsNavBtn.addEventListener('click', () => {
-                settingsTab.classList.remove('active');
-                cornerEffectsTab.classList.add('active');
-                
-                // Cacher status et tabs principaux
-                statusHeader.style.display = 'none';
-                mainTabs.style.display = 'none';
-            });
-            
-            cornerEffectsBackBtn.addEventListener('click', () => {
-                cornerEffectsTab.classList.remove('active');
-                settingsTab.classList.add('active');
-                
-                // Réafficher status et tabs principaux
-                statusHeader.style.display = 'block';
-                mainTabs.style.display = 'flex';
-            });
-        });
-    </script>
 </body>
 </html>

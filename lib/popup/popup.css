@@ -1,0 +1,188 @@
+/**
+ * Popup System Styles
+ * Version: 1.0.0
+ * 
+ * Standalone CSS for the popup notification system.
+ * No dependencies required.
+ */
+
+/* ========================================
+   Container and Base Styles
+   ======================================== */
+
+.popup-container-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.popup-item {
+    position: absolute;
+    left: 5%;
+    width: 90%;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: popupSlideDown 0.3s ease;
+    transition: top 0.3s ease;
+    pointer-events: auto;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* ========================================
+   Header Section
+   ======================================== */
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.popup-type {
+    flex: 1;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    line-height: 1;
+    margin-left: 8px;
+}
+
+.popup-close:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+}
+
+/* ========================================
+   Message Section
+   ======================================== */
+
+.popup-message {
+    padding: 10px 12px 12px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #ffffff;
+}
+
+/* ========================================
+   Popup Types - Error
+   ======================================== */
+
+.popup-item.popup-error {
+    background-color: #dc3545;
+}
+
+.popup-item.popup-error .popup-header {
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+}
+
+/* ========================================
+   Popup Types - Warning
+   ======================================== */
+
+.popup-item.popup-warning {
+    background-color: #ffc107;
+}
+
+.popup-item.popup-warning .popup-header {
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #000000;
+}
+
+.popup-item.popup-warning .popup-message {
+    color: #000000;
+}
+
+.popup-item.popup-warning .popup-close {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.popup-item.popup-warning .popup-close:hover {
+    color: #000000;
+}
+
+/* ========================================
+   Popup Types - Success
+   ======================================== */
+
+.popup-item.popup-success {
+    background-color: #28a745;
+}
+
+.popup-item.popup-success .popup-header {
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+}
+
+/* ========================================
+   Popup Types - Info
+   ======================================== */
+
+.popup-item.popup-info {
+    background-color: #00d4ff;
+}
+
+.popup-item.popup-info .popup-header {
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #000000;
+}
+
+.popup-item.popup-info .popup-message {
+    color: #000000;
+}
+
+.popup-item.popup-info .popup-close {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.popup-item.popup-info .popup-close:hover {
+    color: #000000;
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+@keyframes popupSlideDown {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes popupSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}

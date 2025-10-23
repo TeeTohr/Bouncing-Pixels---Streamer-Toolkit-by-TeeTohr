@@ -70,6 +70,7 @@ function createLogo(index) {
     logo.element.style.top = logo.y + 'px';
     logo.element.style.transition = 'none';
     logo.element.style.opacity = (hasImageError || !isVisible) ? '0' : '1';
+    logo.element.style.zIndex = '500';
     
     applyImageRenderingToElement(logo.element, imageRendering);
     

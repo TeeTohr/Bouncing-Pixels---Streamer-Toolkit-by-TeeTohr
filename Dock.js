@@ -84,11 +84,11 @@ tabButtons.forEach(btn => {
 // Mettre à jour l'interface selon l'état isPlaying
 function updatePlayPauseUI() {
     if (isPlaying) {
-        togglePlayBtn.textContent = '⏸ Pause';
+        togglePlayBtn.textContent = 'Pause';
         togglePlayBtn.classList.remove('btn-success');
         togglePlayBtn.classList.add('btn-danger');
     } else {
-        togglePlayBtn.textContent = '▶️ Start';
+        togglePlayBtn.textContent = 'Start';
         togglePlayBtn.classList.remove('btn-danger');
         togglePlayBtn.classList.add('btn-success');
     }
@@ -98,11 +98,11 @@ function updatePlayPauseUI() {
 // Mettre à jour l'interface selon l'état isVisible
 function updateVisibilityUI() {
     if (isVisible) {
-        toggleVisibilityBtn.textContent = '👁️ Hide';
+        toggleVisibilityBtn.textContent = 'Hide';
         toggleVisibilityBtn.classList.remove('btn-info');
         toggleVisibilityBtn.classList.add('btn-secondary');
     } else {
-        toggleVisibilityBtn.textContent = '👁️ Show';
+        toggleVisibilityBtn.textContent = 'Show';
         toggleVisibilityBtn.classList.remove('btn-secondary');
         toggleVisibilityBtn.classList.add('btn-info');
     }
@@ -341,8 +341,27 @@ colorModeSelect.addEventListener('change', (e) => {
     savePersistentData('bpix-colorChange', colorChangeMode);
 });
 
+// Fonction pour tester si une image existe
+function testImageExists(imagePath) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = imagePath;
+    });
+}
+
 imageSelect.addEventListener('change', (e) => {
     const imageName = e.target.value;
+    const imagePath = `images/${imageName}`;
+    
+    // Tester si l'image existe
+    testImageExists(imagePath).then(exists => {
+        if (!exists) {
+            showPopup(`Image "${imageName}" not found in /images folder!`, 'error');
+        }
+    });
+    
     sendCommand('changeImage', imageName);
     savePersistentData('bpix-imageFile', imageName);
 });
@@ -363,6 +382,17 @@ cornerToleranceSlider.addEventListener('input', (e) => {
 // Gestion des Corner Effects
 cornerEffectSelect.addEventListener('change', (e) => {
     const effect = e.target.value;
+    
+    // Tester si l'effet existe (sauf pour "none")
+    if (effect !== 'none') {
+        const effectPath = `corner_effects/${effect}`;
+        testImageExists(effectPath).then(exists => {
+            if (!exists) {
+                showPopup(`Corner effect "${effect}" not found in /corner_effects folder!`, 'error');
+            }
+        });
+    }
+    
     sendCommand('cornerEffect', effect);
     savePersistentData('bpix-cornerEffect', effect);
 });
@@ -460,8 +490,16 @@ cornerDurationUpBtn.addEventListener('mouseleave', () => {
 // Gestion Corner Fade Out
 function updateCornerFadeOut(newFadeOut) {
     const maxDuration = parseFloat(cornerDurationInput.value);
+    const requestedFadeOut = newFadeOut;
+    
     newFadeOut = Math.max(0, Math.min(maxDuration, newFadeOut));
     newFadeOut = Math.round(newFadeOut * 10) / 10;
+    
+    // Afficher un warning si l'utilisateur tente de dépasser la durée
+    if (requestedFadeOut > maxDuration && requestedFadeOut > 0) {
+        showPopup(`Fade out duration cannot exceed effect duration (${maxDuration.toFixed(1)}s)`, 'warning');
+    }
+    
     cornerFadeOutInput.value = newFadeOut;
     cornerFadeOutValue.textContent = newFadeOut.toFixed(1);
     sendCommand('cornerFadeOut', newFadeOut);
@@ -794,3 +832,85 @@ setInterval(checkImageError, 500);
 
 // Charger les données sauvegardées au démarrage
 loadPersistentData();
+// ========================================
+// Système générique de navigation sous-menus
+// ========================================
+
+const submenuNavigationState = {
+    activeSubmenu: null,
+    previousTab: null
+};
+
+// Initialiser le système de navigation des sous-menus
+function initSubmenuNavigation() {
+    const mainTabsHeader = document.getElementById('mainTabsHeader');
+    
+    // Gérer tous les boutons de navigation vers sous-menus
+    document.querySelectorAll('[data-submenu-nav]').forEach(navButton => {
+        navButton.addEventListener('click', () => {
+            const submenuName = navButton.dataset.submenuNav;
+            navigateToSubmenu(submenuName);
+        });
+    });
+    
+    // Gérer tous les boutons de retour
+    document.querySelectorAll('[data-submenu-back]').forEach(backButton => {
+        backButton.addEventListener('click', () => {
+            navigateBackFromSubmenu();
+        });
+    });
+}
+
+// Naviguer vers un sous-menu
+function navigateToSubmenu(submenuName) {
+    // Sauvegarder l'onglet actif actuel
+    const activeTabBtn = document.querySelector('.tab-btn.active');
+    submenuNavigationState.previousTab = activeTabBtn ? activeTabBtn.dataset.tab : 'controls';
+    submenuNavigationState.activeSubmenu = submenuName;
+    
+    // Cacher le header principal et tous les onglets principaux
+    const mainTabsHeader = document.getElementById('mainTabsHeader');
+    mainTabsHeader.style.display = 'none';
+    
+    document.querySelectorAll('.tab-content:not([data-submenu-content])').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Afficher le header et le contenu du sous-menu
+    const submenuHeader = document.querySelector(`[data-submenu-header="${submenuName}"]`);
+    const submenuContent = document.querySelector(`[data-submenu-content="${submenuName}"]`);
+    
+    if (submenuHeader) submenuHeader.style.display = 'block';
+    if (submenuContent) submenuContent.classList.add('active');
+}
+
+// Retour du sous-menu vers les onglets principaux
+function navigateBackFromSubmenu() {
+    if (!submenuNavigationState.activeSubmenu) return;
+    
+    // Cacher le sous-menu actuel
+    const submenuHeader = document.querySelector(`[data-submenu-header="${submenuNavigationState.activeSubmenu}"]`);
+    const submenuContent = document.querySelector(`[data-submenu-content="${submenuNavigationState.activeSubmenu}"]`);
+    
+    if (submenuHeader) submenuHeader.style.display = 'none';
+    if (submenuContent) submenuContent.classList.remove('active');
+    
+    // Réafficher le header principal
+    const mainTabsHeader = document.getElementById('mainTabsHeader');
+    mainTabsHeader.style.display = 'block';
+    
+    // Réafficher l'onglet qui était actif avant d'aller dans le sous-menu
+    const previousTabId = submenuNavigationState.previousTab + '-tab';
+    const previousTab = document.getElementById(previousTabId);
+    if (previousTab) {
+        previousTab.classList.add('active');
+    }
+    
+    // Reset l'état
+    submenuNavigationState.activeSubmenu = null;
+    submenuNavigationState.previousTab = null;
+}
+
+// Initialiser au chargement de la page
+initSubmenuNavigation();
+
