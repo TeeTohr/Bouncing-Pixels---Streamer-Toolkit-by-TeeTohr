@@ -95,6 +95,8 @@ function createLogo(index) {
             });
             applyScaleToAll();
             repositionAllLogos();
+            // Recalculer les bounding boxes pour la rotation
+            recalculateAllBoundingBoxes(logos);
             try {
                 localStorage.removeItem('bpix-image-error');
             } catch (e) {}
@@ -102,6 +104,10 @@ function createLogo(index) {
     });
     
     container.appendChild(logo.element);
+    
+    // Initialiser la rotation pour ce logo
+    initLogoSpin(logo);
+    
     return logo;
 }
 
@@ -246,6 +252,8 @@ function changeImage(imageName) {
 }
 
 // Animation principale
+let lastFrameTime = Date.now();
+
 function animate() {
     if (!isActive) {
         requestAnimationFrame(animate);
@@ -253,50 +261,91 @@ function animate() {
     }
 
     const now = Date.now();
+    const deltaTime = (now - lastFrameTime) / 1000; // En secondes, utilisé uniquement pour la rotation
+    lastFrameTime = now;
+    
+    // Mettre à jour la rotation globale (une seule fois par frame pour le mode "same")
+    updateGlobalRotation(deltaTime);
     
     logos.forEach(logo => {
+        // Mettre à jour la rotation
+        updateLogoSpin(logo, deltaTime);
+        
+        // Obtenir la bounding box actuelle (ajustée selon la rotation)
+        const bbox = getLogoBoundingBox(logo);
+        
+        // Calculer les offsets pour centrer la bounding box sur la position du logo
+        const offsetX = (bbox.width - logo.width) / 2;
+        const offsetY = (bbox.height - logo.height) / 2;
+        
+        // Déplacement (sans deltaTime pour garder le comportement original)
         logo.x += logo.dx * speed;
         logo.y += logo.dy * speed;
 
         let bouncedHorizontal = false;
         let bouncedVertical = false;
 
-        // Rebond horizontal
-        if (logo.x <= 0 || logo.x >= window.innerWidth - logo.width) {
+        // Rebond horizontal (avec bounding box ajustée et vérification de direction)
+        if (logo.x - offsetX <= 0 || logo.x + logo.width + offsetX >= window.innerWidth) {
             if (now - logo.lastHorizontalBounce >= bounceCooldown) {
-                logo.dx = -logo.dx;
-                logo.x = logo.x <= 0 ? 0 : window.innerWidth - logo.width;
-                logo.lastHorizontalBounce = now;
-                bouncedHorizontal = true;
+                // Vérifier la direction du mouvement pour éviter les rebonds multiples
+                const isMovingLeft = logo.dx < 0;
+                const isMovingRight = logo.dx > 0;
+                const isTouchingLeft = logo.x - offsetX <= 0;
+                const isTouchingRight = logo.x + logo.width + offsetX >= window.innerWidth;
                 
-                // Mémoriser quel bord horizontal a été touché
-                if (logo.x <= 0) {
-                    logo.timeLastHitLeft = now;
-                } else {
-                    logo.timeLastHitRight = now;
+                // Rebondir seulement si on se déplace vers le mur qu'on touche
+                if ((isTouchingLeft && isMovingLeft) || (isTouchingRight && isMovingRight)) {
+                    logo.dx = -logo.dx;
+                    logo.x = logo.x - offsetX <= 0 ? offsetX : window.innerWidth - logo.width - offsetX;
+                    logo.lastHorizontalBounce = now;
+                    bouncedHorizontal = true;
+                    
+                    // Mémoriser quel bord horizontal a été touché
+                    if (logo.x - offsetX <= 0) {
+                        logo.timeLastHitLeft = now;
+                    } else {
+                        logo.timeLastHitRight = now;
+                    }
+                    
+                    changeLogoColor(logo);
+                    changeLogoSpinOnBounce(logo, logos);
                 }
-                
-                changeLogoColor(logo);
             }
         }
 
-        // Rebond vertical
-        if (logo.y <= 0 || logo.y >= window.innerHeight - logo.height) {
+        // Rebond vertical (avec bounding box ajustée et vérification de direction)
+        if (logo.y - offsetY <= 0 || logo.y + logo.height + offsetY >= window.innerHeight) {
             if (now - logo.lastVerticalBounce >= bounceCooldown) {
-                logo.dy = -logo.dy;
-                logo.y = logo.y <= 0 ? 0 : window.innerHeight - logo.height;
-                logo.lastVerticalBounce = now;
-                bouncedVertical = true;
+                // Vérifier la direction du mouvement pour éviter les rebonds multiples
+                const isMovingUp = logo.dy < 0;
+                const isMovingDown = logo.dy > 0;
+                const isTouchingTop = logo.y - offsetY <= 0;
+                const isTouchingBottom = logo.y + logo.height + offsetY >= window.innerHeight;
                 
-                // Mémoriser quel bord vertical a été touché
-                if (logo.y <= 0) {
-                    logo.timeLastHitTop = now;
-                } else {
-                    logo.timeLastHitBottom = now;
+                // Rebondir seulement si on se déplace vers le mur qu'on touche
+                if ((isTouchingTop && isMovingUp) || (isTouchingBottom && isMovingDown)) {
+                    logo.dy = -logo.dy;
+                    logo.y = logo.y - offsetY <= 0 ? offsetY : window.innerHeight - logo.height - offsetY;
+                    logo.lastVerticalBounce = now;
+                    bouncedVertical = true;
+                    
+                    // Mémoriser quel bord vertical a été touché
+                    if (logo.y - offsetY <= 0) {
+                        logo.timeLastHitTop = now;
+                    } else {
+                        logo.timeLastHitBottom = now;
+                    }
+                    
+                    changeLogoColor(logo);
+                    changeLogoSpinOnBounce(logo, logos);
                 }
-                
-                changeLogoColor(logo);
             }
+        }
+        
+        // Changer la rotation globale si nécessaire (mode "same rotation")
+        if ((bouncedHorizontal || bouncedVertical) && spinMultipleLogosBehavior === 'same') {
+            changeGlobalSpinOnBounce(logos);
         }
 
         // Détection des coins si un rebond vient de se produire
@@ -431,6 +480,8 @@ function processCommand(action, value) {
                 if (logo.x > window.innerWidth - logo.width) logo.x = window.innerWidth - logo.width;
                 if (logo.y > window.innerHeight - logo.height) logo.y = window.innerHeight - logo.height;
             });
+            // Recalculer les bounding boxes pour la rotation
+            recalculateAllBoundingBoxes(logos);
             break;
         case 'logoCount':
             updateLogoCount(parseInt(value));
@@ -467,6 +518,27 @@ function processCommand(action, value) {
                 sendLog('🎬 Test effet au coin:', value);
                 createCornerEffect(value, container, imageRendering);
             }
+            break;
+        case 'spinEnabled':
+            updateSpinSettings({ spinEnabled: value === 'true' || value === true }, logos);
+            break;
+        case 'spinSpeedMin':
+            updateSpinSettings({ spinSpeedMin: parseFloat(value) }, logos);
+            break;
+        case 'spinSpeedMax':
+            updateSpinSettings({ spinSpeedMax: parseFloat(value) }, logos);
+            break;
+        case 'spinChangeSpeedOnBounce':
+            updateSpinSettings({ spinChangeSpeedOnBounce: value === 'true' || value === true }, logos);
+            break;
+        case 'spinDirection':
+            updateSpinSettings({ spinDirection: value }, logos);
+            break;
+        case 'spinMultipleLogosBehavior':
+            updateSpinSettings({ spinMultipleLogosBehavior: value }, logos);
+            break;
+        case 'spinCollisionDetection':
+            updateSpinSettings({ spinCollisionDetection: value }, logos);
             break;
     }
 }
@@ -512,6 +584,9 @@ function loadInitialCommands() {
     
     // Charger les paramètres des effets de coin
     loadCornerEffectSettings();
+    
+    // Charger les paramètres de rotation
+    loadSpinSettings();
     
     if (savedLogoCount) {
         processCommand('logoCount', parseInt(savedLogoCount));

@@ -12,6 +12,7 @@ Extract all files to a folder (e.g., C:\OBS\SETUP\)
 3. Set the path of the BouncingImage.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\BouncingImage.html) (do not Check "Local file")
 4. Set dimensions (recommended: dimensions of your canvas size)
 5. IMPORTANT: Check "Shutdown source when not visible" to prevent performance issues
+	5a. Leave it unchecked if you want to "save" the images position/rotation/etc when coming back to the scene
 6. Click OK
 
 ### Step 2: Add the Control Dock
@@ -25,12 +26,12 @@ Extract all files to a folder (e.g., C:\OBS\SETUP\)
 
 
 
-## Using Custom Images / Corner Effects
+## Using Custom Assets
 
-1. Place your images in the /images and/or /corner_effects folder
-2. Name them as: custom.png, custom.jpg, custom.gif, custom.webp, or custom.svg
-3. Select them from the Image/Corner Effects dropdown in the Settings tab
-4. Supported formats: PNG, JPG, GIF (animated), WebP (animated), SVG
+1. Place your assets in the various subfolders available such as /images or /corner_effects according to each tooltip's explanation in the Dock for each setting
+4. Supported formats are listed in each setting's main tooltip
+3. Name them as custom.xxx, xxx being one of the allowed file extension/format
+4. Select them from the Settings tab
 
 
 

@@ -68,6 +68,12 @@
                 <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
 
+            <!-- Navigation vers sous-menu Image Spin -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="image-spin">
+                <label>Image Spin</label>
+                <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
+            </div>
+
             <!-- Navigation vers sous-menu Corner Effects -->
             <div class="control-group corner-effects-nav" data-submenu-nav="corner-effects">
                 <label>Corner Effects</label>
@@ -150,6 +156,78 @@
                 <div class="slider-container">
                     <input type="range" id="intensitySlider" min="0.5" max="10" step="0.1" value="2">
                 </div>
+            </div>
+        </div>
+
+        <!-- Sous-menu Image Spin -->
+        <div class="tab-header" data-submenu-header="image-spin" style="display: none;">
+            <div class="corner-effects-header">
+                <button class="btn-back" data-submenu-back>
+                    <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
+                    <span>Back</span>
+                </button>
+                <h3>Image Spin</h3>
+            </div>
+        </div>
+
+        <div class="tab-content" data-submenu-content="image-spin">
+            <div class="control-group">
+                <label for="spinEnabledCheckbox">
+                    <input type="checkbox" id="spinEnabledCheckbox" style="margin-right: 8px;">
+                    Enable Rotation
+                </label>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Minimum rotation speed in turns per second. When changed, all logos instantly update to a new random speed between Min and Max.">?</span>
+                <label for="spinSpeedMinInput">Rotation Speed Min: <span id="spinSpeedMinValue">0.50</span> turn/s</label>
+                <div class="slider-container">
+                    <input type="range" id="spinSpeedMinSlider" min="0.05" max="5" step="0.05" value="0.5">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Maximum rotation speed in turns per second. When changed, all logos instantly update to a new random speed between Min and Max.">?</span>
+                <label for="spinSpeedMaxInput">Rotation Speed Max: <span id="spinSpeedMaxValue">0.50</span> turn/s</label>
+                <div class="slider-container">
+                    <input type="range" id="spinSpeedMaxSlider" min="0.05" max="5" step="0.05" value="0.5">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="spinChangeSpeedOnBounceCheckbox">
+                    <input type="checkbox" id="spinChangeSpeedOnBounceCheckbox" style="margin-right: 8px;">
+                    Change Rotation Speed on Bounce
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="spinDirectionSelect">Rotation Direction</label>
+                <select id="spinDirectionSelect" class="mode-select">
+                    <option value="clockwise">Clockwise</option>
+                    <option value="counter-clockwise">Counter Clockwise</option>
+                    <option value="random-on-bounce">Random direction on bounce</option>
+                    <option value="opposite-on-bounce">Change to opposite direction on bounce</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="All same: all logos rotate at the same speed and direction.
+Unique: each logo has its own rotation parameters.">?</span>
+                <label for="spinMultipleLogosBehaviorSelect">Multiple Logos Behavior</label>
+                <select id="spinMultipleLogosBehaviorSelect" class="mode-select">
+                    <option value="same">All same rotation</option>
+                    <option value="unique">Unique rotation per logo</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Precise: perfect edge detection but uses more CPU. Optimized: slightly less accurate (~5px) but much faster. Use Optimized unless you notice issues.">?</span>
+                <label for="spinCollisionDetectionSelect">Collision Detection</label>
+                <select id="spinCollisionDetectionSelect" class="mode-select">
+                    <option value="optimized">Optimized (Default)</option>
+                    <option value="precise">Precise</option>
+                </select>
             </div>
         </div>
 

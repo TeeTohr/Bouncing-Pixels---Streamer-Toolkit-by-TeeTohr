@@ -37,6 +37,17 @@ const cornerScaleUpBtn = document.getElementById('cornerScaleUpBtn');
 const cornerZIndexSelect = document.getElementById('cornerZIndexSelect');
 const testEffectBtn = document.getElementById('testEffectBtn');
 
+// Éléments Image Spin
+const spinEnabledCheckbox = document.getElementById('spinEnabledCheckbox');
+const spinSpeedMinSlider = document.getElementById('spinSpeedMinSlider');
+const spinSpeedMinValue = document.getElementById('spinSpeedMinValue');
+const spinSpeedMaxSlider = document.getElementById('spinSpeedMaxSlider');
+const spinSpeedMaxValue = document.getElementById('spinSpeedMaxValue');
+const spinChangeSpeedOnBounceCheckbox = document.getElementById('spinChangeSpeedOnBounceCheckbox');
+const spinDirectionSelect = document.getElementById('spinDirectionSelect');
+const spinMultipleLogosBehaviorSelect = document.getElementById('spinMultipleLogosBehaviorSelect');
+const spinCollisionDetectionSelect = document.getElementById('spinCollisionDetectionSelect');
+
 let isPlaying = true;
 let isVisible = true;
 let colorChangeMode = 'hue';
@@ -281,6 +292,76 @@ function loadPersistentData() {
         console.log('Corner z-index chargé:', savedCornerZIndex);
     } else {
         sendCommand('cornerZIndex', 'above');
+    }
+    
+    // Charger les paramètres Image Spin
+    const savedSpinEnabled = localStorage.getItem('bpix-spinEnabled');
+    if (savedSpinEnabled !== null) {
+        spinEnabledCheckbox.checked = savedSpinEnabled === 'true';
+        sendCommand('spinEnabled', savedSpinEnabled);
+        console.log('Spin enabled chargé:', savedSpinEnabled);
+    } else {
+        sendCommand('spinEnabled', 'false');
+    }
+    
+    const savedSpinSpeedMin = localStorage.getItem('bpix-spinSpeedMin');
+    if (savedSpinSpeedMin) {
+        const speedMin = parseFloat(savedSpinSpeedMin);
+        spinSpeedMinSlider.value = speedMin;
+        spinSpeedMinValue.textContent = speedMin.toFixed(2);
+        sendCommand('spinSpeedMin', speedMin);
+        console.log('Spin speed min chargé:', speedMin);
+    } else {
+        spinSpeedMinValue.textContent = '0.50';
+        sendCommand('spinSpeedMin', 0.5);
+    }
+    
+    const savedSpinSpeedMax = localStorage.getItem('bpix-spinSpeedMax');
+    if (savedSpinSpeedMax) {
+        const speedMax = parseFloat(savedSpinSpeedMax);
+        spinSpeedMaxSlider.value = speedMax;
+        spinSpeedMaxValue.textContent = speedMax.toFixed(2);
+        sendCommand('spinSpeedMax', speedMax);
+        console.log('Spin speed max chargé:', speedMax);
+    } else {
+        spinSpeedMaxValue.textContent = '0.50';
+        sendCommand('spinSpeedMax', 0.5);
+    }
+    
+    const savedSpinChangeSpeedOnBounce = localStorage.getItem('bpix-spinChangeSpeedOnBounce');
+    if (savedSpinChangeSpeedOnBounce !== null) {
+        spinChangeSpeedOnBounceCheckbox.checked = savedSpinChangeSpeedOnBounce === 'true';
+        sendCommand('spinChangeSpeedOnBounce', savedSpinChangeSpeedOnBounce);
+        console.log('Spin change speed on bounce chargé:', savedSpinChangeSpeedOnBounce);
+    } else {
+        sendCommand('spinChangeSpeedOnBounce', 'false');
+    }
+    
+    const savedSpinDirection = localStorage.getItem('bpix-spinDirection');
+    if (savedSpinDirection) {
+        spinDirectionSelect.value = savedSpinDirection;
+        sendCommand('spinDirection', savedSpinDirection);
+        console.log('Spin direction chargé:', savedSpinDirection);
+    } else {
+        sendCommand('spinDirection', 'clockwise');
+    }
+    
+    const savedSpinMultipleLogosBehavior = localStorage.getItem('bpix-spinMultipleLogosBehavior');
+    if (savedSpinMultipleLogosBehavior) {
+        spinMultipleLogosBehaviorSelect.value = savedSpinMultipleLogosBehavior;
+        sendCommand('spinMultipleLogosBehavior', savedSpinMultipleLogosBehavior);
+        console.log('Spin multiple logos behavior chargé:', savedSpinMultipleLogosBehavior);
+    } else {
+        sendCommand('spinMultipleLogosBehavior', 'unique');
+    }
+    
+    const savedSpinCollisionDetection = localStorage.getItem('bpix-spinCollisionDetection');
+    if (savedSpinCollisionDetection) {
+        spinCollisionDetectionSelect.value = savedSpinCollisionDetection;
+        sendCommand('spinCollisionDetection', savedSpinCollisionDetection);
+        console.log('Spin collision detection chargé:', savedSpinCollisionDetection);
+    } else {
+        sendCommand('spinCollisionDetection', 'optimized');
     }
 }
 
@@ -832,6 +913,96 @@ setInterval(checkImageError, 500);
 
 // Charger les données sauvegardées au démarrage
 loadPersistentData();
+
+// ========================================
+// Gestion des contrôles Image Spin
+// ========================================
+
+// Cooldown pour les warnings de vitesse
+let lastSpinSpeedWarning = 0;
+const spinSpeedWarningCooldown = 2000; // 2 secondes
+
+// Enable rotation checkbox
+spinEnabledCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('spinEnabled', enabled.toString());
+    savePersistentData('bpix-spinEnabled', enabled.toString());
+});
+
+// Spin Speed Min slider
+spinSpeedMinSlider.addEventListener('input', (e) => {
+    let value = parseFloat(e.target.value);
+    const maxValue = parseFloat(spinSpeedMaxSlider.value);
+    
+    // Empêcher min > max
+    if (value > maxValue) {
+        value = maxValue;
+        spinSpeedMinSlider.value = value;
+        
+        // Afficher le warning seulement si le cooldown est passé
+        const now = Date.now();
+        if (now - lastSpinSpeedWarning >= spinSpeedWarningCooldown) {
+            showPopup('Min cannot be greater than Max - Speed values corrected', 'warning');
+            lastSpinSpeedWarning = now;
+        }
+    }
+    
+    spinSpeedMinValue.textContent = value.toFixed(2);
+    sendCommand('spinSpeedMin', value);
+    savePersistentData('bpix-spinSpeedMin', value.toString());
+});
+
+// Spin Speed Max slider
+spinSpeedMaxSlider.addEventListener('input', (e) => {
+    let value = parseFloat(e.target.value);
+    const minValue = parseFloat(spinSpeedMinSlider.value);
+    
+    // Empêcher max < min
+    if (value < minValue) {
+        value = minValue;
+        spinSpeedMaxSlider.value = value;
+        
+        // Afficher le warning seulement si le cooldown est passé
+        const now = Date.now();
+        if (now - lastSpinSpeedWarning >= spinSpeedWarningCooldown) {
+            showPopup('Max cannot be less than Min - Speed values corrected', 'warning');
+            lastSpinSpeedWarning = now;
+        }
+    }
+    
+    spinSpeedMaxValue.textContent = value.toFixed(2);
+    sendCommand('spinSpeedMax', value);
+    savePersistentData('bpix-spinSpeedMax', value.toString());
+});
+
+// Change rotation speed on bounce checkbox
+spinChangeSpeedOnBounceCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('spinChangeSpeedOnBounce', enabled.toString());
+    savePersistentData('bpix-spinChangeSpeedOnBounce', enabled.toString());
+});
+
+// Rotation direction select
+spinDirectionSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
+    sendCommand('spinDirection', value);
+    savePersistentData('bpix-spinDirection', value);
+});
+
+// Multiple logos behavior select
+spinMultipleLogosBehaviorSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
+    sendCommand('spinMultipleLogosBehavior', value);
+    savePersistentData('bpix-spinMultipleLogosBehavior', value);
+});
+
+// Collision detection select
+spinCollisionDetectionSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
+    sendCommand('spinCollisionDetection', value);
+    savePersistentData('bpix-spinCollisionDetection', value);
+});
+
 // ========================================
 // Système générique de navigation sous-menus
 // ========================================
@@ -914,3 +1085,61 @@ function navigateBackFromSubmenu() {
 // Initialiser au chargement de la page
 initSubmenuNavigation();
 
+// ========================================
+// Système de positionnement automatique des tooltips
+// ========================================
+
+function adjustTooltipPositions() {
+    const infoIcons = document.querySelectorAll('.info-icon');
+    const viewportHeight = window.innerHeight;
+    
+    infoIcons.forEach(icon => {
+        const rect = icon.getBoundingClientRect();
+        const iconBottom = rect.bottom;
+        const iconTop = rect.top;
+        
+        // Hauteur estimée de la tooltip (peut varier selon le contenu)
+        const estimatedTooltipHeight = 120;
+        
+        // Supprimer les classes existantes
+        icon.classList.remove('tooltip-above', 'tooltip-below');
+        
+        // Si l'icône est en bas de page, déplacer la tooltip vers le haut
+        if (iconBottom + estimatedTooltipHeight > viewportHeight) {
+            icon.classList.add('tooltip-above');
+        }
+        // Si l'icône est en haut de page, déplacer la tooltip vers le bas
+        else if (iconTop < estimatedTooltipHeight) {
+            icon.classList.add('tooltip-below');
+        }
+        // Sinon, utiliser la position par défaut (à gauche, centrée)
+    });
+}
+
+// Ajuster au chargement (avec un délai pour que tout soit chargé)
+setTimeout(adjustTooltipPositions, 100);
+
+// Réajuster au scroll (avec throttle pour éviter trop d'appels)
+let scrollTimeout;
+const scrollableContents = document.querySelectorAll('.tab-content');
+scrollableContents.forEach(content => {
+    content.addEventListener('scroll', () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(adjustTooltipPositions, 150);
+    });
+});
+
+// Réajuster au redimensionnement (avec throttle)
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(adjustTooltipPositions, 150);
+});
+
+// Réajuster lors des changements d'onglet (sur les clics de tabs uniquement)
+const tooltipTriggerButtons = document.querySelectorAll('.tab-btn, [data-submenu-nav], [data-submenu-back]');
+tooltipTriggerButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        setTimeout(adjustTooltipPositions, 50);
+    });
+});
