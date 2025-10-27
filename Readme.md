@@ -2,7 +2,8 @@
 
 ## Installation
 
-Extract all files to a folder (e.g., C:\OBS\SETUP\)
+1. Download the source code zip from the latest Release
+2. Extract all files to a folder (e.g., C:\OBS\SETUP\)
 
 ## Adding to OBS
 
@@ -12,7 +13,7 @@ Extract all files to a folder (e.g., C:\OBS\SETUP\)
 3. Set the path of the BouncingImage.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\BouncingImage.html) (do not Check "Local file")
 4. Set dimensions (recommended: dimensions of your canvas size)
 5. IMPORTANT: Check "Shutdown source when not visible" to prevent performance issues
-	5a. Leave it unchecked if you want to "save" the images position/rotation/etc when coming back to the scene
+    - Leave it unchecked if you want to "save" the images position/rotation/etc when coming back to the scene though this may cost some performance
 6. Click OK
 
 ### Step 2: Add the Control Dock
@@ -42,7 +43,7 @@ Extract all files to a folder (e.g., C:\OBS\SETUP\)
 Dock doesn't control the logo:
 - Make sure both the Browser Source and Dock are loaded (refresh both if needed)
 - Check that both files are in the same folder (all files should stay in their original folder)
-- Right-click on the Browser Source → Interact, then try the Dock again
+- Right-click on the Browser Source, Interact, then try the Dock again
 
 Image not loading:
 - Check that the image file exists in /images folder
@@ -81,4 +82,4 @@ Enjoy !
 
 
 
-AI Disclaimer : AI was used as a coding assistant / code generator for this toolkit. However all visual and audio assets bundled with the toolkit were made by hand which is why they are VERY simple I am not an artist at all !
+**AI Disclaimer** : AI was used as a coding assistant / code generator for this toolkit. However all visual and audio assets bundled with the toolkit were made by hand by myself *which is why they are VERY simple I am not an artist at all* !
