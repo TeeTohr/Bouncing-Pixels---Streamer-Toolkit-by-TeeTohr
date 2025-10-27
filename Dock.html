@@ -47,7 +47,7 @@
 
             <!-- Number of Logos -->
             <div class="control-group">
-                <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color.">?</span>
+                <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color. High values (20+) may impact performance, especially with collisions enabled.">?</span>
                 <label for="logoCountInput">Number of Logos</label>
                 <div class="scale-controls">
                     <button id="logoCountDownBtn" class="btn btn-scale">−</button>
@@ -71,6 +71,12 @@
             <!-- Navigation vers sous-menu Image Spin -->
             <div class="control-group corner-effects-nav" data-submenu-nav="image-spin">
                 <label>Image Spin</label>
+                <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
+            </div>
+
+            <!-- Navigation vers sous-menu Logo Collisions -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="logo-collisions">
+                <label>Logo Collisions</label>
                 <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
 
@@ -228,6 +234,52 @@ Unique: each logo has its own rotation parameters.">?</span>
                     <option value="optimized">Optimized (Default)</option>
                     <option value="precise">Precise</option>
                 </select>
+            </div>
+        </div>
+
+        <!-- Sous-menu Logo Collisions -->
+        <div class="tab-header" data-submenu-header="logo-collisions" style="display: none;">
+            <div class="corner-effects-header">
+                <button class="btn-back" data-submenu-back>
+                    <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
+                    <span>Back</span>
+                </button>
+                <h3>Logo Collisions</h3>
+            </div>
+        </div>
+
+        <div class="tab-content" data-submenu-content="logo-collisions">
+            <div class="control-group">
+                <label for="collisionEnabledCheckbox">
+                    <input type="checkbox" id="collisionEnabledCheckbox" checked style="margin-right: 8px;">
+                    Enable Logo Collisions
+                </label>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Simple: Logos exchange velocities (predictable, classic DVD behavior).
+Physics: Realistic elastic collision based on impact angle (more natural).">?</span>
+                <label for="collisionModeSelect">Collision Mode</label>
+                <select id="collisionModeSelect" class="mode-select">
+                    <option value="physics">Physics (Realistic)</option>
+                    <option value="simple">Simple</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Prevents logos from getting stuck together after collision. Increase if logos keep overlapping, decrease if they bounce too far apart. Only adjust if you notice collision issues.">?</span>
+                <label for="antiStuckForceSlider">Anti-Stuck Force: <span id="antiStuckForceValue">2.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="antiStuckForceSlider" min="0.5" max="5" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Logos slower than this percentage of base speed will gradually accelerate. Prevents logos from becoming too slow after multiple collisions. Set to 0% to disable.">?</span>
+                <label for="minimumSpeedSlider">Minimum Speed: <span id="minimumSpeedValue">30</span>%</label>
+                <div class="slider-container">
+                    <input type="range" id="minimumSpeedSlider" min="0" max="100" step="5" value="30">
+                </div>
             </div>
         </div>
 

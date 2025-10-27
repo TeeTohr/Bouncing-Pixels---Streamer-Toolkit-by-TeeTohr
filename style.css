@@ -470,7 +470,9 @@ body {
 #intensitySlider,
 #cornerToleranceSlider,
 #spinSpeedMinSlider,
-#spinSpeedMaxSlider {
+#spinSpeedMaxSlider,
+#antiStuckForceSlider,
+#minimumSpeedSlider {
     width: 100%;
     height: 6px;
     border-radius: 3px;
@@ -483,7 +485,9 @@ body {
 #intensitySlider::-webkit-slider-thumb,
 #cornerToleranceSlider::-webkit-slider-thumb,
 #spinSpeedMinSlider::-webkit-slider-thumb,
-#spinSpeedMaxSlider::-webkit-slider-thumb {
+#spinSpeedMaxSlider::-webkit-slider-thumb,
+#antiStuckForceSlider::-webkit-slider-thumb,
+#minimumSpeedSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -497,7 +501,9 @@ body {
 #intensitySlider::-moz-range-thumb,
 #cornerToleranceSlider::-moz-range-thumb,
 #spinSpeedMinSlider::-moz-range-thumb,
-#spinSpeedMaxSlider::-moz-range-thumb {
+#spinSpeedMaxSlider::-moz-range-thumb,
+#antiStuckForceSlider::-moz-range-thumb,
+#minimumSpeedSlider::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;

@@ -48,6 +48,14 @@ const spinDirectionSelect = document.getElementById('spinDirectionSelect');
 const spinMultipleLogosBehaviorSelect = document.getElementById('spinMultipleLogosBehaviorSelect');
 const spinCollisionDetectionSelect = document.getElementById('spinCollisionDetectionSelect');
 
+// Éléments Logo Collisions
+const collisionEnabledCheckbox = document.getElementById('collisionEnabledCheckbox');
+const collisionModeSelect = document.getElementById('collisionModeSelect');
+const antiStuckForceSlider = document.getElementById('antiStuckForceSlider');
+const antiStuckForceValue = document.getElementById('antiStuckForceValue');
+const minimumSpeedSlider = document.getElementById('minimumSpeedSlider');
+const minimumSpeedValue = document.getElementById('minimumSpeedValue');
+
 let isPlaying = true;
 let isVisible = true;
 let colorChangeMode = 'hue';
@@ -362,6 +370,49 @@ function loadPersistentData() {
         console.log('Spin collision detection chargé:', savedSpinCollisionDetection);
     } else {
         sendCommand('spinCollisionDetection', 'optimized');
+    }
+    
+    // Charger les paramètres Logo Collisions
+    const savedCollisionEnabled = localStorage.getItem('bpix-collisionEnabled');
+    if (savedCollisionEnabled !== null) {
+        collisionEnabledCheckbox.checked = savedCollisionEnabled === 'true';
+        sendCommand('collisionEnabled', savedCollisionEnabled);
+        console.log('Collision enabled chargé:', savedCollisionEnabled);
+    } else {
+        sendCommand('collisionEnabled', 'true'); // Enabled par défaut
+    }
+    
+    const savedCollisionMode = localStorage.getItem('bpix-collisionMode');
+    if (savedCollisionMode) {
+        collisionModeSelect.value = savedCollisionMode;
+        sendCommand('collisionMode', savedCollisionMode);
+        console.log('Collision mode chargé:', savedCollisionMode);
+    } else {
+        sendCommand('collisionMode', 'physics');
+    }
+    
+    const savedAntiStuckForce = localStorage.getItem('bpix-antiStuckForce');
+    if (savedAntiStuckForce) {
+        const force = parseFloat(savedAntiStuckForce);
+        antiStuckForceSlider.value = force;
+        antiStuckForceValue.textContent = force.toFixed(1);
+        sendCommand('antiStuckForce', force);
+        console.log('Anti-stuck force chargé:', force);
+    } else {
+        antiStuckForceValue.textContent = '2.0';
+        sendCommand('antiStuckForce', 2.0);
+    }
+    
+    const savedMinimumSpeed = localStorage.getItem('bpix-minimumSpeedPercent');
+    if (savedMinimumSpeed) {
+        const percent = parseFloat(savedMinimumSpeed);
+        minimumSpeedSlider.value = percent;
+        minimumSpeedValue.textContent = Math.round(percent);
+        sendCommand('minimumSpeedPercent', percent / 100); // Convertir en 0-1
+        console.log('Minimum speed chargé:', percent + '%');
+    } else {
+        minimumSpeedValue.textContent = '30';
+        sendCommand('minimumSpeedPercent', 0.30);
     }
 }
 
@@ -1001,6 +1052,40 @@ spinCollisionDetectionSelect.addEventListener('change', (e) => {
     const value = e.target.value;
     sendCommand('spinCollisionDetection', value);
     savePersistentData('bpix-spinCollisionDetection', value);
+});
+
+// ========================================
+// Gestion des contrôles Logo Collisions
+// ========================================
+
+// Enable collisions checkbox
+collisionEnabledCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('collisionEnabled', enabled.toString());
+    savePersistentData('bpix-collisionEnabled', enabled.toString());
+});
+
+// Collision mode select
+collisionModeSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
+    sendCommand('collisionMode', value);
+    savePersistentData('bpix-collisionMode', value);
+});
+
+// Anti-stuck force slider
+antiStuckForceSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    antiStuckForceValue.textContent = value.toFixed(1);
+    sendCommand('antiStuckForce', value);
+    savePersistentData('bpix-antiStuckForce', value.toString());
+});
+
+// Minimum speed slider
+minimumSpeedSlider.addEventListener('input', (e) => {
+    const percent = parseInt(e.target.value);
+    minimumSpeedValue.textContent = percent;
+    sendCommand('minimumSpeedPercent', percent / 100); // Convertir en 0-1
+    savePersistentData('bpix-minimumSpeedPercent', percent.toString());
 });
 
 // ========================================
