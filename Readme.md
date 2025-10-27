@@ -7,7 +7,7 @@
 
 ## Adding to OBS
 
-### Step 1: Add the Bouncing Pixels Source
+#### Step 1: Add the Bouncing Pixels Source
 1. In OBS, add a new Browser Source
 2. Name it whatever you want (e.g. "Bouncing Pixels", etc.)
 3. Set the path of the BouncingImage.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\BouncingImage.html) (do not Check "Local file")
@@ -16,7 +16,7 @@
     - Leave it unchecked if you want to "save" the images position/rotation/etc when coming back to the scene though this may cost some performance
 6. Click OK
 
-### Step 2: Add the Control Dock
+#### Step 2: Add the Control Dock
 1. In OBS menu, go to Docks → Custom Browser Docks
 2. Dock Name: "Bouncing Pixels" (or any name you prefer)
 3. Set the path of the Dock.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\Dock.html)
