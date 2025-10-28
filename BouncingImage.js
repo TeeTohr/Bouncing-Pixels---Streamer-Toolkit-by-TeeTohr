@@ -19,10 +19,11 @@ let logoCount = 1;
 let imageRendering = 'smooth';
 let cornerTolerance = 0.10; // Tolérance en secondes pour la détection des coins
 let minimumSpeedPercent = 0.30; // Vitesse minimale en % de la vitesse de base (0-1)
+let maxSpeedPercent = 3.0; // Vitesse maximale en % de la vitesse de base (0-5, défaut 3.0 = 300%)
 let currentImageSrc = 'images/default.png'; // Image source actuelle
 
 let lastCommand = null;
-const bounceCooldown = 100;
+const bounceCooldown = 50; // Réduit pour meilleure réactivité après collisions logo-logo
 
 // Tableau des logos
 let logos = [];
@@ -262,6 +263,23 @@ function applyMinimumSpeed(logo) {
     }
 }
 
+// ========================================
+// Appliquer la vitesse maximale
+// ========================================
+function applyMaxSpeed(logo) {
+    if (maxSpeedPercent <= 0) return; // Désactivé si 0%
+    
+    const maxSpeed = speed * maxSpeedPercent;
+    const currentSpeed = Math.sqrt(logo.dx * logo.dx + logo.dy * logo.dy);
+    
+    if (currentSpeed > maxSpeed) {
+        // Réduire la vitesse pour ne pas dépasser le maximum
+        const ratio = maxSpeed / currentSpeed;
+        logo.dx *= ratio;
+        logo.dy *= ratio;
+    }
+}
+
 // Réinitialiser les couleurs
 function resetAllColors() {
     logos.forEach(logo => {
@@ -316,6 +334,9 @@ function animate() {
         
         // Appliquer la vitesse minimale
         applyMinimumSpeed(logo);
+        
+        // Appliquer la vitesse maximale
+        applyMaxSpeed(logo);
 
         let bouncedHorizontal = false;
         let bouncedVertical = false;
@@ -597,8 +618,14 @@ function processCommand(action, value) {
         case 'antiStuckForce':
             updateCollisionSettings({ antiStuckForce: parseFloat(value) }, logos);
             break;
+        case 'minimumSeparationSpeed':
+            updateCollisionSettings({ minimumSeparationSpeed: parseFloat(value) }, logos);
+            break;
         case 'minimumSpeedPercent':
             minimumSpeedPercent = parseFloat(value);
+            break;
+        case 'maxSpeedPercent':
+            maxSpeedPercent = parseFloat(value);
             break;
     }
 }

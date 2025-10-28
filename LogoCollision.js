@@ -7,6 +7,8 @@
 let collisionEnabled = true;
 let collisionMode = 'physics'; // 'simple', 'physics'
 let antiStuckForce = 2.0;
+let minimumSeparationSpeed = 1.0; // Vitesse de repousse minimum (0-3)
+let collisionRotationChangeEnabled = false; // Inverser la rotation lors de collision avec rotations opposées
 
 // Cooldown pour éviter les collisions répétées immédiates
 const COLLISION_COOLDOWN = 50; // ms (réduit pour meilleure réactivité)
@@ -216,6 +218,20 @@ function resolveCollision(logoA, logoB, obbA, obbB, now) {
     
     // Anti-stuck : séparer les logos jusqu'à ce qu'ils ne se chevauchent plus
     separateUntilClear(logoA, logoB, nx, ny);
+    
+    // Reset des cooldowns de rebond mur pour permettre rebond immédiat
+    logoA.lastHorizontalBounce = 0;
+    logoA.lastVerticalBounce = 0;
+    logoB.lastHorizontalBounce = 0;
+    logoB.lastVerticalBounce = 0;
+    
+    // Garantir une vitesse de séparation minimale pour éviter le glissement/stuttering
+    if (minimumSeparationSpeed > 0) {
+        applyMinimumSeparationSpeed(logoA, logoB, nx, ny);
+    }
+    
+    // Gérer la rotation pour éviter le glissement
+    handleRotationOnCollision(logoA, logoB, nx, ny);
 }
 
 // ========================================
@@ -247,6 +263,79 @@ function separateUntilClear(logoA, logoB, nx, ny) {
     logoA.y -= ny * separationStep * 3;
     logoB.x += nx * separationStep * 3;
     logoB.y += ny * separationStep * 3;
+}
+
+// ========================================
+// Appliquer une force de repousse minimum pour éviter le glissement/stuttering
+// ========================================
+function applyMinimumSeparationSpeed(logoA, logoB, nx, ny) {
+    // Calculer la vitesse relative projetée sur la normale
+    const relVelX = logoB.dx - logoA.dx;
+    const relVelY = logoB.dy - logoA.dy;
+    const relVelOnNormal = relVelX * nx + relVelY * ny;
+    
+    // Si la vitesse de séparation est trop faible, booster
+    if (Math.abs(relVelOnNormal) < minimumSeparationSpeed) {
+        const boost = (minimumSeparationSpeed - Math.abs(relVelOnNormal)) / 2;
+        
+        // Appliquer le boost dans la direction de la normale
+        // (diviser par 2 car on applique à chaque logo)
+        logoA.dx -= nx * boost;
+        logoA.dy -= ny * boost;
+        logoB.dx += nx * boost;
+        logoB.dy += ny * boost;
+    }
+}
+
+// ========================================
+// Gérer la rotation lors de collision pour éviter le glissement
+// ========================================
+function handleRotationOnCollision(logoA, logoB, nx, ny) {
+    // Vérifier si les logos ont une rotation active
+    if (!logoA.spinSpeed && !logoB.spinSpeed) {
+        return; // Pas de rotation, rien à faire
+    }
+    
+    // Utiliser la variable globale spinDirection de ImageSpin.js
+    const currentSpinDirection = typeof spinDirection !== 'undefined' ? spinDirection : 'clockwise';
+    
+    // Vérifier si les logos tournent dans des directions opposées
+    if (logoA.spinSpeed !== 0 && logoB.spinSpeed !== 0) {
+        const sameDirection = (logoA.spinDirectionMultiplier > 0) === (logoB.spinDirectionMultiplier > 0);
+        
+        if (!sameDirection) {
+            // FORCER une direction opposée forte
+            // Au lieu de juste booster, on force les logos à s'éloigner dans des directions strictement opposées
+            const minSeparationSpeed = 2.5; // Vitesse de séparation minimum
+            
+            // Calculer la vitesse actuelle de séparation
+            const relVelX = logoB.dx - logoA.dx;
+            const relVelY = logoB.dy - logoA.dy;
+            const relVelOnNormal = relVelX * nx + relVelY * ny;
+            
+            // Si la séparation est trop faible, forcer une vitesse opposée forte
+            if (Math.abs(relVelOnNormal) < minSeparationSpeed) {
+                // Réinitialiser les vitesses dans des directions strictement opposées
+                logoA.dx = -nx * minSeparationSpeed / 2;
+                logoA.dy = -ny * minSeparationSpeed / 2;
+                logoB.dx = nx * minSeparationSpeed / 2;
+                logoB.dy = ny * minSeparationSpeed / 2;
+            } else {
+                // Si déjà une bonne séparation, juste booster
+                const strongBoost = 2.0;
+                logoA.dx -= nx * strongBoost;
+                logoA.dy -= ny * strongBoost;
+                logoB.dx += nx * strongBoost;
+                logoB.dy += ny * strongBoost;
+            }
+            
+            // OPTION 2 : Inverser la rotation (si activé et applicable)
+            if (collisionRotationChangeEnabled && 
+                (currentSpinDirection === 'random-on-bounce' || currentSpinDirection === 'opposite-on-bounce')) {
+                logoB.spinDirectionMultiplier = -logoB.spinDirectionMultiplier;
+            }
+        }
+    }
 }
 
 // ========================================
@@ -420,6 +509,14 @@ function updateCollisionSettings(settings, logos) {
     if (settings.antiStuckForce !== undefined) {
         antiStuckForce = parseFloat(settings.antiStuckForce);
     }
+    
+    if (settings.minimumSeparationSpeed !== undefined) {
+        minimumSeparationSpeed = parseFloat(settings.minimumSeparationSpeed);
+    }
+    
+    if (settings.collisionRotationChangeEnabled !== undefined) {
+        collisionRotationChangeEnabled = settings.collisionRotationChangeEnabled;
+    }
 }
 
 // ========================================
@@ -434,4 +531,10 @@ function loadCollisionSettings() {
     
     const savedAntiStuck = localStorage.getItem('bpix-antiStuckForce');
     if (savedAntiStuck) antiStuckForce = parseFloat(savedAntiStuck);
+    
+    const savedMinSepSpeed = localStorage.getItem('bpix-minimumSeparationSpeed');
+    if (savedMinSepSpeed) minimumSeparationSpeed = parseFloat(savedMinSepSpeed);
+    
+    const savedRotationChange = localStorage.getItem('bpix-collisionRotationChangeEnabled');
+    if (savedRotationChange !== null) collisionRotationChangeEnabled = savedRotationChange === 'true';
 }

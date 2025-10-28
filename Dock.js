@@ -53,8 +53,13 @@ const collisionEnabledCheckbox = document.getElementById('collisionEnabledCheckb
 const collisionModeSelect = document.getElementById('collisionModeSelect');
 const antiStuckForceSlider = document.getElementById('antiStuckForceSlider');
 const antiStuckForceValue = document.getElementById('antiStuckForceValue');
+const minimumSeparationSpeedSlider = document.getElementById('minimumSeparationSpeedSlider');
+const minimumSeparationSpeedValue = document.getElementById('minimumSeparationSpeedValue');
 const minimumSpeedSlider = document.getElementById('minimumSpeedSlider');
 const minimumSpeedValue = document.getElementById('minimumSpeedValue');
+const maxSpeedSlider = document.getElementById('maxSpeedSlider');
+const maxSpeedValue = document.getElementById('maxSpeedValue');
+const collisionRotationChangeCheckbox = document.getElementById('collisionRotationChangeCheckbox');
 
 let isPlaying = true;
 let isVisible = true;
@@ -403,6 +408,18 @@ function loadPersistentData() {
         sendCommand('antiStuckForce', 2.0);
     }
     
+    const savedMinSepSpeed = localStorage.getItem('bpix-minimumSeparationSpeed');
+    if (savedMinSepSpeed) {
+        const speed = parseFloat(savedMinSepSpeed);
+        minimumSeparationSpeedSlider.value = speed;
+        minimumSeparationSpeedValue.textContent = speed.toFixed(1);
+        sendCommand('minimumSeparationSpeed', speed);
+        console.log('Minimum separation speed chargé:', speed);
+    } else {
+        minimumSeparationSpeedValue.textContent = '1.0';
+        sendCommand('minimumSeparationSpeed', 1.0);
+    }
+    
     const savedMinimumSpeed = localStorage.getItem('bpix-minimumSpeedPercent');
     if (savedMinimumSpeed) {
         const percent = parseFloat(savedMinimumSpeed);
@@ -413,6 +430,28 @@ function loadPersistentData() {
     } else {
         minimumSpeedValue.textContent = '30';
         sendCommand('minimumSpeedPercent', 0.30);
+    }
+    
+    const savedMaxSpeed = localStorage.getItem('bpix-maxSpeedPercent');
+    if (savedMaxSpeed) {
+        const percent = parseFloat(savedMaxSpeed);
+        maxSpeedSlider.value = percent;
+        maxSpeedValue.textContent = percent >= 500 ? 'No Limit' : Math.round(percent);
+        sendCommand('maxSpeedPercent', percent >= 500 ? 0 : percent / 100);
+        console.log('Maximum speed chargé:', percent + '%');
+    } else {
+        maxSpeedValue.textContent = '300';
+        sendCommand('maxSpeedPercent', 3.0);
+    }
+    
+    const savedRotationChange = localStorage.getItem('bpix-collisionRotationChangeEnabled');
+    if (savedRotationChange !== null) {
+        const enabled = savedRotationChange === 'true';
+        collisionRotationChangeCheckbox.checked = enabled;
+        sendCommand('collisionRotationChangeEnabled', enabled);
+        console.log('Collision rotation change chargé:', enabled);
+    } else {
+        sendCommand('collisionRotationChangeEnabled', false); // Désactivé par défaut
     }
 }
 
@@ -1080,12 +1119,35 @@ antiStuckForceSlider.addEventListener('input', (e) => {
     savePersistentData('bpix-antiStuckForce', value.toString());
 });
 
+// Minimum separation speed slider
+minimumSeparationSpeedSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    minimumSeparationSpeedValue.textContent = value.toFixed(1);
+    sendCommand('minimumSeparationSpeed', value);
+    savePersistentData('bpix-minimumSeparationSpeed', value.toString());
+});
+
 // Minimum speed slider
 minimumSpeedSlider.addEventListener('input', (e) => {
     const percent = parseInt(e.target.value);
     minimumSpeedValue.textContent = percent;
     sendCommand('minimumSpeedPercent', percent / 100); // Convertir en 0-1
     savePersistentData('bpix-minimumSpeedPercent', percent.toString());
+});
+
+// Maximum speed slider
+maxSpeedSlider.addEventListener('input', (e) => {
+    const percent = parseInt(e.target.value);
+    maxSpeedValue.textContent = percent >= 500 ? 'No Limit' : percent;
+    sendCommand('maxSpeedPercent', percent >= 500 ? 0 : percent / 100);
+    savePersistentData('bpix-maxSpeedPercent', percent.toString());
+});
+
+// Collision rotation change checkbox
+collisionRotationChangeCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('collisionRotationChangeEnabled', enabled);
+    savePersistentData('bpix-collisionRotationChangeEnabled', enabled.toString());
 });
 
 // ========================================

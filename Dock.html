@@ -256,6 +256,11 @@ Unique: each logo has its own rotation parameters.">?</span>
                 </label>
             </div>
 
+            <!-- Message informatif rotation -->
+            <div style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid #00d4ff; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.5;">
+                <strong>💡 Tip:</strong> For smoother and more logical collisions with rotation enabled, use <strong>"Random Direction on Bounce"</strong> or <strong>"Change to opposite direction on Bounce"</strong> instead of forcing Clockwise/Counterclockwise direction in the <strong>"Image Spin"</strong> section. Otherwise there are cases where logos will slide and stutter against each other.
+            </div>
+
             <div class="control-group">
                 <span class="info-icon info-icon-top-right" data-tooltip="Simple: Logos exchange velocities (predictable, classic DVD behavior).
 Physics: Realistic elastic collision based on impact angle (more natural).">?</span>
@@ -275,11 +280,35 @@ Physics: Realistic elastic collision based on impact angle (more natural).">?</s
             </div>
 
             <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Minimum speed at which logos separate after collision. Prevents visual stuttering when logos slide against each other. Set to 0 for pure physics (may cause stuttering). Higher values = smoother separation.">?</span>
+                <label for="minimumSeparationSpeedSlider">Minimum Separation Speed: <span id="minimumSeparationSpeedValue">1.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="minimumSeparationSpeedSlider" min="0" max="3" step="0.1" value="1">
+                </div>
+            </div>
+
+            <div class="control-group">
                 <span class="info-icon info-icon-top-right" data-tooltip="Logos slower than this percentage of base speed will gradually accelerate. Prevents logos from becoming too slow after multiple collisions. Set to 0% to disable.">?</span>
                 <label for="minimumSpeedSlider">Minimum Speed: <span id="minimumSpeedValue">30</span>%</label>
                 <div class="slider-container">
                     <input type="range" id="minimumSpeedSlider" min="0" max="100" step="5" value="30">
                 </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Maximum speed limit as percentage of base speed. Prevents logos from becoming too fast after collisions. Set to maximum (500%) to disable the limit completely.">?</span>
+                <label for="maxSpeedSlider">Maximum Speed: <span id="maxSpeedValue">300</span>%</label>
+                <div class="slider-container">
+                    <input type="range" id="maxSpeedSlider" min="100" max="500" step="10" value="300">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="When enabled, logos with opposite rotations will change their rotation direction upon collision to prevent sliding/stuttering. Only works with 'Random on Bounce' or 'Opposite on Bounce' rotation modes. No effect with 'Clockwise' or 'Counter-clockwise' modes.">?</span>
+                <label for="collisionRotationChangeCheckbox">
+                    <input type="checkbox" id="collisionRotationChangeCheckbox" style="margin-right: 8px;">
+                    Change Rotation on Collision
+                </label>
             </div>
         </div>
 
