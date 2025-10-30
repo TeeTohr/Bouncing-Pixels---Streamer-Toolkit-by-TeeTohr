@@ -1,42 +1,45 @@
 // ========================================
-// Logo Collision System
-// Gestion des collisions entre logos
+// Logo Collision System V2 - Physique Réaliste
+// Système de collisions avec rotation et moment angulaire
 // ========================================
 
 // Paramètres de collision
 let collisionEnabled = true;
 let collisionMode = 'physics'; // 'simple', 'physics'
 let antiStuckForce = 2.0;
-let minimumSeparationSpeed = 1.0; // Vitesse de repousse minimum (0-3)
-let collisionRotationChangeEnabled = false; // Inverser la rotation lors de collision avec rotations opposées
+let minimumSeparationSpeed = 1.0;
+let collisionRotationChangeEnabled = false;
 
-// Cooldown pour éviter les collisions répétées immédiates
-const COLLISION_COOLDOWN = 50; // ms (réduit pour meilleure réactivité)
+// Nouveaux paramètres physiques
+let restitutionCoefficient = 0.95; // Coefficient de restitution (0-1, 1=parfaitement élastique)
+let frictionCoefficient = 0.1; // Friction au point de contact (0-1)
+let rotationalDamping = 0.98; // Amortissement de la rotation (0-1, 1=pas d'amortissement)
+let rotationTransferMultiplier = 1.0; // Multiplicateur du transfert de rotation (0-3)
+
+// Cooldown pour éviter les collisions répétées
+const COLLISION_COOLDOWN = 50; // ms
 
 // ========================================
 // Obtenir l'OBB (Oriented Bounding Box) d'un logo
-// Retourne les 4 coins du rectangle tourné
 // ========================================
 function getLogoOBB(logo) {
     const centerX = logo.x + logo.width / 2;
     const centerY = logo.y + logo.height / 2;
     
-    const angle = (logo.rotation || 0) * Math.PI / 180; // Conversion en radians
+    const angle = (logo.rotation || 0) * Math.PI / 180;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     
     const halfWidth = logo.width / 2;
     const halfHeight = logo.height / 2;
     
-    // Calculer les 4 coins du rectangle tourné
     const corners = [
-        { x: -halfWidth, y: -halfHeight }, // Top-left
-        { x: halfWidth, y: -halfHeight },  // Top-right
-        { x: halfWidth, y: halfHeight },   // Bottom-right
-        { x: -halfWidth, y: halfHeight }   // Bottom-left
+        { x: -halfWidth, y: -halfHeight },
+        { x: halfWidth, y: -halfHeight },
+        { x: halfWidth, y: halfHeight },
+        { x: -halfWidth, y: halfHeight }
     ];
     
-    // Appliquer la rotation et translater au centre
     return corners.map(corner => ({
         x: centerX + corner.x * cos - corner.y * sin,
         y: centerY + corner.x * sin + corner.y * cos
@@ -60,17 +63,27 @@ function projectPolygon(corners, axis) {
 }
 
 // ========================================
-// Vérifier si deux projections se chevauchent
+// Vérifier si deux projections se chevauchent et retourner la profondeur
 // ========================================
-function projectionsOverlap(proj1, proj2) {
-    return !(proj1.max < proj2.min || proj2.max < proj1.min);
+function getOverlapDepth(proj1, proj2) {
+    if (proj1.max < proj2.min || proj2.max < proj1.min) {
+        return 0; // Pas de chevauchement
+    }
+    
+    // Calculer la profondeur de pénétration
+    const overlap1 = proj1.max - proj2.min;
+    const overlap2 = proj2.max - proj1.min;
+    
+    return Math.min(overlap1, overlap2);
 }
 
 // ========================================
-// Collision OBB avec SAT (Separating Axis Theorem)
+// Collision OBB avec SAT - retourne la normale de collision et la profondeur
 // ========================================
-function checkOBBOverlap(obbA, obbB) {
-    // Obtenir les axes à tester (perpendiculaires aux côtés)
+function checkOBBCollision(obbA, obbB) {
+    let minOverlap = Infinity;
+    let collisionNormal = null;
+    
     const axes = [];
     
     // Axes de A
@@ -78,7 +91,6 @@ function checkOBBOverlap(obbA, obbB) {
         const p1 = obbA[i];
         const p2 = obbA[(i + 1) % obbA.length];
         const edge = { x: p2.x - p1.x, y: p2.y - p1.y };
-        // Perpendiculaire (normale)
         axes.push({ x: -edge.y, y: edge.x });
     }
     
@@ -87,31 +99,76 @@ function checkOBBOverlap(obbA, obbB) {
         const p1 = obbB[i];
         const p2 = obbB[(i + 1) % obbB.length];
         const edge = { x: p2.x - p1.x, y: p2.y - p1.y };
-        // Perpendiculaire (normale)
         axes.push({ x: -edge.y, y: edge.x });
     }
     
     // Tester chaque axe
     for (let axis of axes) {
-        // Normaliser l'axe
         const length = Math.sqrt(axis.x * axis.x + axis.y * axis.y);
-        if (length < 0.0001) continue; // Skip si axe nul
+        if (length < 0.0001) continue;
         
         axis.x /= length;
         axis.y /= length;
         
-        // Projeter les deux OBB sur cet axe
         const projA = projectPolygon(obbA, axis);
         const projB = projectPolygon(obbB, axis);
         
-        // Si pas de chevauchement sur cet axe, pas de collision
-        if (!projectionsOverlap(projA, projB)) {
-            return false;
+        const overlap = getOverlapDepth(projA, projB);
+        
+        if (overlap === 0) {
+            return null; // Pas de collision
+        }
+        
+        if (overlap < minOverlap) {
+            minOverlap = overlap;
+            collisionNormal = { x: axis.x, y: axis.y };
         }
     }
     
-    // Chevauchement sur tous les axes = collision !
-    return true;
+    // Collision détectée
+    return {
+        normal: collisionNormal,
+        depth: minOverlap
+    };
+}
+
+// ========================================
+// Calculer le point de contact approximatif entre deux OBB
+// ========================================
+function getContactPoint(obbA, obbB, normal) {
+    // Trouver les points les plus proches le long de la normale
+    let maxA = -Infinity;
+    let maxB = -Infinity;
+    let contactA = null;
+    let contactB = null;
+    
+    // Points de A dans la direction de la normale
+    for (let point of obbA) {
+        const projection = point.x * normal.x + point.y * normal.y;
+        if (projection > maxA) {
+            maxA = projection;
+            contactA = point;
+        }
+    }
+    
+    // Points de B dans la direction opposée
+    for (let point of obbB) {
+        const projection = -(point.x * normal.x + point.y * normal.y);
+        if (projection > maxB) {
+            maxB = projection;
+            contactB = point;
+        }
+    }
+    
+    // Point de contact moyen
+    if (contactA && contactB) {
+        return {
+            x: (contactA.x + contactB.x) / 2,
+            y: (contactA.y + contactB.y) / 2
+        };
+    }
+    
+    return null;
 }
 
 // ========================================
@@ -139,201 +196,310 @@ function checkAndResolveCollisions(logos) {
                 continue;
             }
             
-            // Distance check rapide (optimisation avec dimensions réelles)
-            const dx = logoA.x - logoB.x;
-            const dy = logoA.y - logoB.y;
-            
-            // Utiliser les dimensions réelles (pas bbox) pour distance check
+            // Distance check rapide
+            const dx = (logoA.x + logoA.width / 2) - (logoB.x + logoB.width / 2);
+            const dy = (logoA.y + logoA.height / 2) - (logoB.y + logoB.height / 2);
             const maxDist = Math.max(logoA.width, logoA.height) + Math.max(logoB.width, logoB.height) + 50;
             
             if (dx * dx + dy * dy > maxDist * maxDist) {
-                continue; // Trop loin, skip
+                continue;
             }
             
-            // OBB check précis (prend en compte la rotation)
+            // Collision check précis
             const obbB = getLogoOBB(logoB);
+            const collision = checkOBBCollision(obbA, obbB);
             
-            if (checkOBBOverlap(obbA, obbB)) {
-                collisionPairs.push([logoA, logoB, obbA, obbB]);
+            if (collision) {
+                collisionPairs.push({
+                    logoA,
+                    logoB,
+                    obbA,
+                    obbB,
+                    normal: collision.normal,
+                    depth: collision.depth
+                });
             }
         }
     }
     
     // Résoudre toutes les collisions détectées
-    collisionPairs.forEach(([logoA, logoB, obbA, obbB]) => {
-        resolveCollision(logoA, logoB, obbA, obbB, now);
+    collisionPairs.forEach(data => {
+        if (collisionMode === 'physics') {
+            resolvePhysicsCollisionV2(data, now);
+        } else {
+            resolveSimpleCollision(data.logoA, data.logoB);
+        }
     });
 }
 
 // ========================================
-// Vérifier si deux AABB se chevauchent
+// Résolution physique réaliste avec rotation
 // ========================================
-// Résoudre une collision entre deux logos
-// ========================================
-function resolveCollision(logoA, logoB, obbA, obbB, now) {
+function resolvePhysicsCollisionV2(collisionData, now) {
+    const { logoA, logoB, obbA, obbB, normal, depth } = collisionData;
+    
     // Marquer la collision pour le cooldown
     if (!logoA.lastCollisionWith) logoA.lastCollisionWith = {};
     if (!logoB.lastCollisionWith) logoB.lastCollisionWith = {};
     logoA.lastCollisionWith[logoB.id] = now;
     logoB.lastCollisionWith[logoA.id] = now;
     
-    // Calculer le vecteur entre les centres
-    const centerAX = logoA.x + logoA.width / 2;
-    const centerAY = logoA.y + logoA.height / 2;
-    const centerBX = logoB.x + logoB.width / 2;
-    const centerBY = logoB.y + logoB.height / 2;
+    // Centres de masse
+    const centerA = {
+        x: logoA.x + logoA.width / 2,
+        y: logoA.y + logoA.height / 2
+    };
+    const centerB = {
+        x: logoB.x + logoB.width / 2,
+        y: logoB.y + logoB.height / 2
+    };
     
-    const dx = centerBX - centerAX;
-    const dy = centerBY - centerAY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    // S'assurer que la normale pointe de A vers B
+    const centerDiff = {
+        x: centerB.x - centerA.x,
+        y: centerB.y - centerA.y
+    };
     
-    // Cas extrême : logos exactement superposés
-    if (distance < 0.001) {
-        const angle = Math.random() * Math.PI * 2;
-        const nx = Math.cos(angle);
-        const ny = Math.sin(angle);
-        
-        // Appliquer le mode de collision
-        if (collisionMode === 'physics') {
-            resolvePhysicsCollision(logoA, logoB, nx, ny);
-        } else {
-            resolveSimpleCollision(logoA, logoB);
-        }
-        
-        // Séparer avec normale aléatoire jusqu'à séparation complète
-        separateUntilClear(logoA, logoB, nx, ny);
+    const normalDot = normal.x * centerDiff.x + normal.y * centerDiff.y;
+    if (normalDot < 0) {
+        normal.x = -normal.x;
+        normal.y = -normal.y;
+    }
+    
+    // Point de contact
+    const contactPoint = getContactPoint(obbA, obbB, normal);
+    
+    if (!contactPoint) {
+        // Fallback vers le système simple si pas de point de contact
+        resolveSimpleCollision(logoA, logoB);
+        separateLogos(logoA, logoB, normal, depth);
         return;
     }
     
-    // Vecteur normal (direction de A vers B)
-    const nx = dx / distance;
-    const ny = dy / distance;
+    // Vecteurs du centre vers le point de contact
+    const rA = {
+        x: contactPoint.x - centerA.x,
+        y: contactPoint.y - centerA.y
+    };
+    const rB = {
+        x: contactPoint.x - centerB.x,
+        y: contactPoint.y - centerB.y
+    };
     
-    // Appliquer le mode de collision choisi
-    if (collisionMode === 'physics') {
-        resolvePhysicsCollision(logoA, logoB, nx, ny);
-    } else {
-        resolveSimpleCollision(logoA, logoB);
+    // Vitesses angulaires (en radians/frame)
+    const angularVelA = ((logoA.spinSpeed || 0) * (logoA.spinDirectionMultiplier || 0)) * Math.PI / 180;
+    const angularVelB = ((logoB.spinSpeed || 0) * (logoB.spinDirectionMultiplier || 0)) * Math.PI / 180;
+    
+    // Vitesses au point de contact (linéaire + rotationnel)
+    const velA = {
+        x: logoA.dx - rA.y * angularVelA,
+        y: logoA.dy + rA.x * angularVelA
+    };
+    const velB = {
+        x: logoB.dx - rB.y * angularVelB,
+        y: logoB.dy + rB.x * angularVelB
+    };
+    
+    // Vitesse relative
+    const relVel = {
+        x: velA.x - velB.x,
+        y: velA.y - velB.y
+    };
+    
+    // Vitesse relative le long de la normale
+    const velAlongNormal = relVel.x * normal.x + relVel.y * normal.y;
+    
+    // Si les objets s'éloignent déjà, ne rien faire
+    if (velAlongNormal <= 0) {
+        separateLogos(logoA, logoB, normal, depth);
+        return;
     }
     
-    // Anti-stuck : séparer les logos jusqu'à ce qu'ils ne se chevauchent plus
-    separateUntilClear(logoA, logoB, nx, ny);
+    // Masses (on peut utiliser l'aire comme approximation)
+    const massA = logoA.width * logoA.height;
+    const massB = logoB.width * logoB.height;
     
-    // Reset des cooldowns de rebond mur pour permettre rebond immédiat
-    logoA.lastHorizontalBounce = 0;
-    logoA.lastVerticalBounce = 0;
-    logoB.lastHorizontalBounce = 0;
-    logoB.lastVerticalBounce = 0;
+    // Moments d'inertie (approximation pour un rectangle)
+    const inertiaA = massA * (logoA.width * logoA.width + logoA.height * logoA.height) / 12;
+    const inertiaB = massB * (logoB.width * logoB.width + logoB.height * logoB.height) / 12;
     
-    // Garantir une vitesse de séparation minimale pour éviter le glissement/stuttering
-    if (minimumSeparationSpeed > 0) {
-        applyMinimumSeparationSpeed(logoA, logoB, nx, ny);
-    }
+    // Produits vectoriels pour le calcul du dénominateur
+    const rACrossN = rA.x * normal.y - rA.y * normal.x;
+    const rBCrossN = rB.x * normal.y - rB.y * normal.x;
     
-    // Gérer la rotation pour éviter le glissement
-    handleRotationOnCollision(logoA, logoB, nx, ny);
-}
-
-// ========================================
-// Séparer deux logos jusqu'à ce qu'ils ne se chevauchent plus
-// ========================================
-function separateUntilClear(logoA, logoB, nx, ny) {
-    const maxIterations = 10; // Limiter pour éviter boucle infinie
-    const separationStep = 2 * antiStuckForce; // Étape de séparation
+    // Masse effective pour la collision
+    const invMassSum = 1/massA + 1/massB + 
+                       (rACrossN * rACrossN) / inertiaA + 
+                       (rBCrossN * rBCrossN) / inertiaB;
     
-    for (let i = 0; i < maxIterations; i++) {
-        // Séparer un peu
-        logoA.x -= nx * separationStep;
-        logoA.y -= ny * separationStep;
-        logoB.x += nx * separationStep;
-        logoB.y += ny * separationStep;
-        
-        // Vérifier s'ils sont maintenant séparés
-        const newObbA = getLogoOBB(logoA);
-        const newObbB = getLogoOBB(logoB);
-        
-        if (!checkOBBOverlap(newObbA, newObbB)) {
-            // Séparés avec succès !
-            return;
+    // Impulsion (avec coefficient de restitution)
+    const impulseMagnitude = -(1 + restitutionCoefficient) * velAlongNormal / invMassSum;
+    
+    // Vecteur d'impulsion
+    const impulse = {
+        x: impulseMagnitude * normal.x,
+        y: impulseMagnitude * normal.y
+    };
+    
+    // Appliquer l'impulsion aux vitesses linéaires
+    logoA.dx += impulse.x / massA;
+    logoA.dy += impulse.y / massA;
+    logoB.dx -= impulse.x / massB;
+    logoB.dy -= impulse.y / massB;
+    
+    // Appliquer l'impulsion aux vitesses angulaires
+    const torqueA = rA.x * impulse.y - rA.y * impulse.x;
+    const torqueB = rB.x * impulse.y - rB.y * impulse.x;
+    
+    const angularImpulseA = torqueA / inertiaA * rotationTransferMultiplier;
+    const angularImpulseB = -torqueB / inertiaB * rotationTransferMultiplier;
+    
+    // Convertir en degrés/frame et appliquer
+    if (logoA.spinSpeed !== undefined) {
+        const newAngularVelA = angularVelA + angularImpulseA;
+        logoA.spinSpeed = Math.abs(newAngularVelA * 180 / Math.PI);
+        if (newAngularVelA !== 0) {
+            logoA.spinDirectionMultiplier = newAngularVelA > 0 ? 1 : -1;
         }
     }
     
-    // Si toujours collés après 10 itérations, dernière séparation forte
-    logoA.x -= nx * separationStep * 3;
-    logoA.y -= ny * separationStep * 3;
-    logoB.x += nx * separationStep * 3;
-    logoB.y += ny * separationStep * 3;
+    if (logoB.spinSpeed !== undefined) {
+        const newAngularVelB = angularVelB + angularImpulseB;
+        logoB.spinSpeed = Math.abs(newAngularVelB * 180 / Math.PI);
+        if (newAngularVelB !== 0) {
+            logoB.spinDirectionMultiplier = newAngularVelB > 0 ? 1 : -1;
+        }
+    }
+    
+    // Friction tangentielle
+    if (frictionCoefficient > 0) {
+        applyFriction(logoA, logoB, normal, relVel, rA, rB, massA, massB, inertiaA, inertiaB, impulseMagnitude);
+    }
+    
+    // Séparer les logos
+    separateLogos(logoA, logoB, normal, depth);
 }
 
 // ========================================
-// Appliquer une force de repousse minimum pour éviter le glissement/stuttering
+// Appliquer la friction au point de contact
 // ========================================
-function applyMinimumSeparationSpeed(logoA, logoB, nx, ny) {
-    // Calculer la vitesse relative projetée sur la normale
-    const relVelX = logoB.dx - logoA.dx;
-    const relVelY = logoB.dy - logoA.dy;
-    const relVelOnNormal = relVelX * nx + relVelY * ny;
+function applyFriction(logoA, logoB, normal, relVel, rA, rB, massA, massB, inertiaA, inertiaB, normalImpulse) {
+    // Vecteur tangent (perpendiculaire à la normale)
+    const tangent = {
+        x: -normal.y,
+        y: normal.x
+    };
     
-    // Si la vitesse de séparation est trop faible, booster
-    if (Math.abs(relVelOnNormal) < minimumSeparationSpeed) {
-        const boost = (minimumSeparationSpeed - Math.abs(relVelOnNormal)) / 2;
-        
-        // Appliquer le boost dans la direction de la normale
-        // (diviser par 2 car on applique à chaque logo)
-        logoA.dx -= nx * boost;
-        logoA.dy -= ny * boost;
-        logoB.dx += nx * boost;
-        logoB.dy += ny * boost;
+    // Vitesse relative tangentielle
+    const relVelTangent = relVel.x * tangent.x + relVel.y * tangent.y;
+    
+    if (Math.abs(relVelTangent) < 0.01) return; // Pas de friction significative
+    
+    // Produits vectoriels
+    const rACrossT = rA.x * tangent.y - rA.y * tangent.x;
+    const rBCrossT = rB.x * tangent.y - rB.y * tangent.x;
+    
+    // Masse effective tangentielle
+    const invMassTangent = 1/massA + 1/massB + 
+                           (rACrossT * rACrossT) / inertiaA + 
+                           (rBCrossT * rBCrossT) / inertiaB;
+    
+    // Impulsion de friction (limitée par le coefficient de friction)
+    let frictionImpulse = -relVelTangent / invMassTangent;
+    const maxFriction = Math.abs(normalImpulse * frictionCoefficient);
+    
+    if (Math.abs(frictionImpulse) > maxFriction) {
+        frictionImpulse = maxFriction * Math.sign(frictionImpulse);
+    }
+    
+    // Vecteur d'impulsion de friction
+    const frictionVec = {
+        x: frictionImpulse * tangent.x,
+        y: frictionImpulse * tangent.y
+    };
+    
+    // Appliquer la friction aux vitesses linéaires
+    logoA.dx += frictionVec.x / massA;
+    logoA.dy += frictionVec.y / massA;
+    logoB.dx -= frictionVec.x / massB;
+    logoB.dy -= frictionVec.y / massB;
+    
+    // Appliquer la friction aux vitesses angulaires
+    const frictionTorqueA = rA.x * frictionVec.y - rA.y * frictionVec.x;
+    const frictionTorqueB = rB.x * frictionVec.y - rB.y * frictionVec.x;
+    
+    if (logoA.spinSpeed !== undefined) {
+        const angularVelA = ((logoA.spinSpeed || 0) * (logoA.spinDirectionMultiplier || 0)) * Math.PI / 180;
+        const newAngularVelA = angularVelA + (frictionTorqueA / inertiaA * rotationTransferMultiplier);
+        logoA.spinSpeed = Math.abs(newAngularVelA * 180 / Math.PI);
+        if (newAngularVelA !== 0) {
+            logoA.spinDirectionMultiplier = newAngularVelA > 0 ? 1 : -1;
+        }
+    }
+    
+    if (logoB.spinSpeed !== undefined) {
+        const angularVelB = ((logoB.spinSpeed || 0) * (logoB.spinDirectionMultiplier || 0)) * Math.PI / 180;
+        const newAngularVelB = angularVelB - (frictionTorqueB / inertiaB * rotationTransferMultiplier);
+        logoB.spinSpeed = Math.abs(newAngularVelB * 180 / Math.PI);
+        if (newAngularVelB !== 0) {
+            logoB.spinDirectionMultiplier = newAngularVelB > 0 ? 1 : -1;
+        }
     }
 }
 
 // ========================================
-// Gérer la rotation lors de collision pour éviter le glissement
+// Séparer les logos après collision
 // ========================================
-function handleRotationOnCollision(logoA, logoB, nx, ny) {
-    // Vérifier si les logos ont une rotation active
-    if (!logoA.spinSpeed && !logoB.spinSpeed) {
-        return; // Pas de rotation, rien à faire
-    }
+function separateLogos(logoA, logoB, normal, depth) {
+    // Séparer proportionnellement aux masses
+    const massA = logoA.width * logoA.height;
+    const massB = logoB.width * logoB.height;
+    const totalMass = massA + massB;
     
-    // Utiliser la variable globale spinDirection de ImageSpin.js
-    const currentSpinDirection = typeof spinDirection !== 'undefined' ? spinDirection : 'clockwise';
+    const separationA = (depth * massB / totalMass) * antiStuckForce;
+    const separationB = (depth * massA / totalMass) * antiStuckForce;
     
-    // Vérifier si les logos tournent dans des directions opposées
-    if (logoA.spinSpeed !== 0 && logoB.spinSpeed !== 0) {
-        const sameDirection = (logoA.spinDirectionMultiplier > 0) === (logoB.spinDirectionMultiplier > 0);
+    logoA.x -= normal.x * separationA;
+    logoA.y -= normal.y * separationA;
+    logoB.x += normal.x * separationB;
+    logoB.y += normal.y * separationB;
+    
+    // Garantir une vitesse minimale de séparation
+    const centerA = {
+        x: logoA.x + logoA.width / 2,
+        y: logoA.y + logoA.height / 2
+    };
+    const centerB = {
+        x: logoB.x + logoB.width / 2,
+        y: logoB.y + logoB.height / 2
+    };
+    
+    const separationVec = {
+        x: centerB.x - centerA.x,
+        y: centerB.y - centerA.y
+    };
+    
+    const separationDist = Math.sqrt(separationVec.x * separationVec.x + separationVec.y * separationVec.y);
+    
+    if (separationDist > 0.001) {
+        const separationNormal = {
+            x: separationVec.x / separationDist,
+            y: separationVec.y / separationDist
+        };
         
-        if (!sameDirection) {
-            // FORCER une direction opposée forte
-            // Au lieu de juste booster, on force les logos à s'éloigner dans des directions strictement opposées
-            const minSeparationSpeed = 2.5; // Vitesse de séparation minimum
-            
-            // Calculer la vitesse actuelle de séparation
-            const relVelX = logoB.dx - logoA.dx;
-            const relVelY = logoB.dy - logoA.dy;
-            const relVelOnNormal = relVelX * nx + relVelY * ny;
-            
-            // Si la séparation est trop faible, forcer une vitesse opposée forte
-            if (Math.abs(relVelOnNormal) < minSeparationSpeed) {
-                // Réinitialiser les vitesses dans des directions strictement opposées
-                logoA.dx = -nx * minSeparationSpeed / 2;
-                logoA.dy = -ny * minSeparationSpeed / 2;
-                logoB.dx = nx * minSeparationSpeed / 2;
-                logoB.dy = ny * minSeparationSpeed / 2;
-            } else {
-                // Si déjà une bonne séparation, juste booster
-                const strongBoost = 2.0;
-                logoA.dx -= nx * strongBoost;
-                logoA.dy -= ny * strongBoost;
-                logoB.dx += nx * strongBoost;
-                logoB.dy += ny * strongBoost;
-            }
-            
-            // OPTION 2 : Inverser la rotation (si activé et applicable)
-            if (collisionRotationChangeEnabled && 
-                (currentSpinDirection === 'random-on-bounce' || currentSpinDirection === 'opposite-on-bounce')) {
-                logoB.spinDirectionMultiplier = -logoB.spinDirectionMultiplier;
-            }
+        const relVel = {
+            x: logoB.dx - logoA.dx,
+            y: logoB.dy - logoA.dy
+        };
+        
+        const separationSpeed = relVel.x * separationNormal.x + relVel.y * separationNormal.y;
+        
+        if (separationSpeed < minimumSeparationSpeed) {
+            const boost = (minimumSeparationSpeed - separationSpeed) / 2;
+            logoA.dx -= separationNormal.x * boost;
+            logoA.dy -= separationNormal.y * boost;
+            logoB.dx += separationNormal.x * boost;
+            logoB.dy += separationNormal.y * boost;
         }
     }
 }
@@ -342,7 +508,6 @@ function handleRotationOnCollision(logoA, logoB, nx, ny) {
 // Mode Simple : Swap des vitesses
 // ========================================
 function resolveSimpleCollision(logoA, logoB) {
-    // Échanger les vitesses
     const tempDx = logoA.dx;
     const tempDy = logoA.dy;
     
@@ -353,37 +518,11 @@ function resolveSimpleCollision(logoA, logoB) {
 }
 
 // ========================================
-// Mode Physics : Collision élastique
+// Fonctions utilitaires pour la compatibilité
 // ========================================
-function resolvePhysicsCollision(logoA, logoB, nx, ny) {
-    // Vitesses relatives
-    const dvx = logoA.dx - logoB.dx;
-    const dvy = logoA.dy - logoB.dy;
-    
-    // Projection de la vitesse relative sur la normale
-    const dvn = dvx * nx + dvy * ny;
-    
-    // Si les logos s'éloignent déjà, ne rien faire
-    if (dvn <= 0) {
-        return;
-    }
-    
-    // Collision élastique avec masses égales
-    // Formule : v1' = v1 - (v1-v2)·n * n
-    logoA.dx -= dvn * nx;
-    logoA.dy -= dvn * ny;
-    logoB.dx += dvn * nx;
-    logoB.dy += dvn * ny;
-}
 
-// ========================================
-// Vérifier si une position overlap avec des logos existants
-// ========================================
-// Vérifier si une position overlap avec des logos existants
-// ========================================
 function checkPositionOverlap(x, y, width, height, existingLogos, minDistance = 20) {
     for (let existing of existingLogos) {
-        // Utiliser les dimensions réelles (pas bbox) pour le spawn
         const newLeft = x - minDistance;
         const newRight = x + width + minDistance;
         const newTop = y - minDistance;
@@ -394,19 +533,15 @@ function checkPositionOverlap(x, y, width, height, existingLogos, minDistance = 
         const existingTop = existing.y - minDistance;
         const existingBottom = existing.y + existing.height + minDistance;
         
-        // Test de chevauchement AABB simple
         if (!(newRight < existingLeft || newLeft > existingRight || 
               newBottom < existingTop || newTop > existingBottom)) {
-            return true; // Overlap détecté
+            return true;
         }
     }
     
-    return false; // Pas d'overlap
+    return false;
 }
 
-// ========================================
-// Trouver une position sans overlap
-// ========================================
 function findNonOverlappingPosition(width, height, existingLogos, viewportWidth, viewportHeight) {
     const maxAttempts = 50;
     const margin = 10;
@@ -420,7 +555,6 @@ function findNonOverlappingPosition(width, height, existingLogos, viewportWidth,
         }
     }
     
-    // Fallback : position aléatoire même avec overlap
     return {
         x: Math.random() * (viewportWidth - width - margin * 2) + margin,
         y: Math.random() * (viewportHeight - height - margin * 2) + margin,
@@ -428,11 +562,8 @@ function findNonOverlappingPosition(width, height, existingLogos, viewportWidth,
     };
 }
 
-// ========================================
-// Séparer tous les logos qui se chevauchent (appelé lors de l'activation)
-// ========================================
 function separateOverlappingLogos(logos) {
-    const maxIterations = 5; // Faire plusieurs passes si nécessaire
+    const maxIterations = 5;
     
     for (let iteration = 0; iteration < maxIterations; iteration++) {
         let hadOverlap = false;
@@ -445,10 +576,11 @@ function separateOverlappingLogos(logos) {
                 const logoB = logos[j];
                 const obbB = getLogoOBB(logoB);
                 
-                if (checkOBBOverlap(obbA, obbB)) {
+                const collision = checkOBBCollision(obbA, obbB);
+                
+                if (collision) {
                     hadOverlap = true;
                     
-                    // Calculer le vecteur entre les centres
                     const centerAX = logoA.x + logoA.width / 2;
                     const centerAY = logoA.y + logoA.height / 2;
                     const centerBX = logoB.x + logoB.width / 2;
@@ -458,7 +590,6 @@ function separateOverlappingLogos(logos) {
                     const dy = centerBY - centerAY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    // Vecteur normal (ou random si exactement superposés)
                     let nx, ny;
                     if (distance < 0.001) {
                         const angle = Math.random() * Math.PI * 2;
@@ -469,8 +600,7 @@ function separateOverlappingLogos(logos) {
                         ny = dy / distance;
                     }
                     
-                    // Séparer les logos (lors de l'activation, on peut être plus généreux)
-                    const separationDistance = 5 * antiStuckForce; // 5px × force pour bien séparer
+                    const separationDistance = 5 * antiStuckForce;
                     
                     logoA.x -= nx * separationDistance;
                     logoA.y -= ny * separationDistance;
@@ -480,7 +610,6 @@ function separateOverlappingLogos(logos) {
             }
         }
         
-        // Si aucun overlap détecté, on peut arrêter
         if (!hadOverlap) {
             break;
         }
@@ -488,7 +617,7 @@ function separateOverlappingLogos(logos) {
 }
 
 // ========================================
-// Mettre à jour les paramètres de collision
+// Mettre à jour les paramètres
 // ========================================
 function updateCollisionSettings(settings, logos) {
     const wasEnabled = collisionEnabled;
@@ -496,7 +625,6 @@ function updateCollisionSettings(settings, logos) {
     if (settings.collisionEnabled !== undefined) {
         collisionEnabled = settings.collisionEnabled;
         
-        // Si on vient d'activer les collisions, séparer les logos qui se chevauchent
         if (!wasEnabled && collisionEnabled && logos && logos.length > 1) {
             separateOverlappingLogos(logos);
         }
@@ -517,11 +645,24 @@ function updateCollisionSettings(settings, logos) {
     if (settings.collisionRotationChangeEnabled !== undefined) {
         collisionRotationChangeEnabled = settings.collisionRotationChangeEnabled;
     }
+    
+    if (settings.restitutionCoefficient !== undefined) {
+        restitutionCoefficient = parseFloat(settings.restitutionCoefficient);
+    }
+    
+    if (settings.frictionCoefficient !== undefined) {
+        frictionCoefficient = parseFloat(settings.frictionCoefficient);
+    }
+    
+    if (settings.rotationalDamping !== undefined) {
+        rotationalDamping = parseFloat(settings.rotationalDamping);
+    }
+    
+    if (settings.rotationTransferMultiplier !== undefined) {
+        rotationTransferMultiplier = parseFloat(settings.rotationTransferMultiplier);
+    }
 }
 
-// ========================================
-// Charger les paramètres sauvegardés
-// ========================================
 function loadCollisionSettings() {
     const savedEnabled = localStorage.getItem('bpix-collisionEnabled');
     if (savedEnabled !== null) collisionEnabled = savedEnabled === 'true';
@@ -537,4 +678,16 @@ function loadCollisionSettings() {
     
     const savedRotationChange = localStorage.getItem('bpix-collisionRotationChangeEnabled');
     if (savedRotationChange !== null) collisionRotationChangeEnabled = savedRotationChange === 'true';
+    
+    const savedRestitution = localStorage.getItem('bpix-restitutionCoefficient');
+    if (savedRestitution) restitutionCoefficient = parseFloat(savedRestitution);
+    
+    const savedFriction = localStorage.getItem('bpix-frictionCoefficient');
+    if (savedFriction) frictionCoefficient = parseFloat(savedFriction);
+    
+    const savedDamping = localStorage.getItem('bpix-rotationalDamping');
+    if (savedDamping) rotationalDamping = parseFloat(savedDamping);
+    
+    const savedRotationTransfer = localStorage.getItem('bpix-rotationTransferMultiplier');
+    if (savedRotationTransfer) rotationTransferMultiplier = parseFloat(savedRotationTransfer);
 }

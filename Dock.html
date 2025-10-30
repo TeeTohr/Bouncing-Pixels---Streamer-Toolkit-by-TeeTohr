@@ -310,6 +310,30 @@ Physics: Realistic elastic collision based on impact angle (more natural).">?</s
                     Change Rotation on Collision
                 </label>
             </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls collision elasticity (bounciness). 1.0 = perfectly elastic (no energy loss), 0.8 = slightly damped, 0.5 = soft collisions with noticeable energy loss. Lower values make logos slow down after collisions.">?</span>
+                <label for="restitutionSlider">Restitution (Elasticity): <span id="restitutionValue">0.95</span></label>
+                <div class="slider-container">
+                    <input type="range" id="restitutionSlider" min="0.3" max="1.0" step="0.05" value="0.95">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Friction at collision contact point. 0.0 = frictionless (pure sliding), 0.2 = realistic friction, 0.5+ = logos 'grip' and transfer rotation. Affects how rotation and linear motion interact during collisions.">?</span>
+                <label for="frictionSlider">Friction: <span id="frictionValue">0.10</span></label>
+                <div class="slider-container">
+                    <input type="range" id="frictionSlider" min="0.0" max="0.8" step="0.05" value="0.10">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls how much rotation is transferred during collisions. 1.0 = realistic physics, 0.5 = reduced rotation transfer (calmer), 2.0 = exaggerated rotation transfer (more dynamic). Affects both friction and angular momentum transfer.">?</span>
+                <label for="rotationTransferSlider">Rotation Transfer: <span id="rotationTransferValue">1.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="rotationTransferSlider" min="0.0" max="3.0" step="0.1" value="1.0">
+                </div>
+            </div>
         </div>
 
         <!-- Sous-menu Corner Effects -->

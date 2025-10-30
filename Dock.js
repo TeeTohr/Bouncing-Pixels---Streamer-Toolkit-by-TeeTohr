@@ -60,6 +60,12 @@ const minimumSpeedValue = document.getElementById('minimumSpeedValue');
 const maxSpeedSlider = document.getElementById('maxSpeedSlider');
 const maxSpeedValue = document.getElementById('maxSpeedValue');
 const collisionRotationChangeCheckbox = document.getElementById('collisionRotationChangeCheckbox');
+const restitutionSlider = document.getElementById('restitutionSlider');
+const restitutionValue = document.getElementById('restitutionValue');
+const frictionSlider = document.getElementById('frictionSlider');
+const frictionValue = document.getElementById('frictionValue');
+const rotationTransferSlider = document.getElementById('rotationTransferSlider');
+const rotationTransferValue = document.getElementById('rotationTransferValue');
 
 let isPlaying = true;
 let isVisible = true;
@@ -452,6 +458,42 @@ function loadPersistentData() {
         console.log('Collision rotation change chargé:', enabled);
     } else {
         sendCommand('collisionRotationChangeEnabled', false); // Désactivé par défaut
+    }
+    
+    const savedRestitution = localStorage.getItem('bpix-restitutionCoefficient');
+    if (savedRestitution) {
+        const value = parseFloat(savedRestitution);
+        restitutionSlider.value = value;
+        restitutionValue.textContent = value.toFixed(2);
+        sendCommand('restitutionCoefficient', value);
+        console.log('Restitution coefficient chargé:', value);
+    } else {
+        restitutionValue.textContent = '0.95';
+        sendCommand('restitutionCoefficient', 0.95);
+    }
+    
+    const savedFriction = localStorage.getItem('bpix-frictionCoefficient');
+    if (savedFriction) {
+        const value = parseFloat(savedFriction);
+        frictionSlider.value = value;
+        frictionValue.textContent = value.toFixed(2);
+        sendCommand('frictionCoefficient', value);
+        console.log('Friction coefficient chargé:', value);
+    } else {
+        frictionValue.textContent = '0.10';
+        sendCommand('frictionCoefficient', 0.10);
+    }
+    
+    const savedRotationTransfer = localStorage.getItem('bpix-rotationTransferMultiplier');
+    if (savedRotationTransfer) {
+        const value = parseFloat(savedRotationTransfer);
+        rotationTransferSlider.value = value;
+        rotationTransferValue.textContent = value.toFixed(1);
+        sendCommand('rotationTransferMultiplier', value);
+        console.log('Rotation transfer multiplier chargé:', value);
+    } else {
+        rotationTransferValue.textContent = '1.0';
+        sendCommand('rotationTransferMultiplier', 1.0);
     }
 }
 
@@ -1148,6 +1190,30 @@ collisionRotationChangeCheckbox.addEventListener('change', (e) => {
     const enabled = e.target.checked;
     sendCommand('collisionRotationChangeEnabled', enabled);
     savePersistentData('bpix-collisionRotationChangeEnabled', enabled.toString());
+});
+
+// Restitution coefficient slider
+restitutionSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    restitutionValue.textContent = value.toFixed(2);
+    sendCommand('restitutionCoefficient', value);
+    savePersistentData('bpix-restitutionCoefficient', value.toString());
+});
+
+// Friction coefficient slider
+frictionSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    frictionValue.textContent = value.toFixed(2);
+    sendCommand('frictionCoefficient', value);
+    savePersistentData('bpix-frictionCoefficient', value.toString());
+});
+
+// Rotation transfer multiplier slider
+rotationTransferSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    rotationTransferValue.textContent = value.toFixed(1);
+    sendCommand('rotationTransferMultiplier', value);
+    savePersistentData('bpix-rotationTransferMultiplier', value.toString());
 });
 
 // ========================================

@@ -627,6 +627,27 @@ function processCommand(action, value) {
         case 'maxSpeedPercent':
             maxSpeedPercent = parseFloat(value);
             break;
+        case 'minimumSpeedPercent':
+            minimumSpeedPercent = parseFloat(value);
+            break;
+        case 'maxSpeedPercent':
+            maxSpeedPercent = parseFloat(value);
+            break;
+        case 'restitutionCoefficient':
+            updateCollisionSettings({ restitutionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'frictionCoefficient':
+            updateCollisionSettings({ frictionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'restitutionCoefficient':
+            updateCollisionSettings({ restitutionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'frictionCoefficient':
+            updateCollisionSettings({ frictionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'rotationTransferMultiplier':
+            updateCollisionSettings({ rotationTransferMultiplier: parseFloat(value) }, logos);
+            break;
     }
 }
 
