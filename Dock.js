@@ -48,6 +48,25 @@ const spinDirectionSelect = document.getElementById('spinDirectionSelect');
 const spinMultipleLogosBehaviorSelect = document.getElementById('spinMultipleLogosBehaviorSelect');
 const spinCollisionDetectionSelect = document.getElementById('spinCollisionDetectionSelect');
 
+// Éléments Logo Collisions
+const collisionEnabledCheckbox = document.getElementById('collisionEnabledCheckbox');
+const collisionModeSelect = document.getElementById('collisionModeSelect');
+const antiStuckForceSlider = document.getElementById('antiStuckForceSlider');
+const antiStuckForceValue = document.getElementById('antiStuckForceValue');
+const minimumSeparationSpeedSlider = document.getElementById('minimumSeparationSpeedSlider');
+const minimumSeparationSpeedValue = document.getElementById('minimumSeparationSpeedValue');
+const minimumSpeedSlider = document.getElementById('minimumSpeedSlider');
+const minimumSpeedValue = document.getElementById('minimumSpeedValue');
+const maxSpeedSlider = document.getElementById('maxSpeedSlider');
+const maxSpeedValue = document.getElementById('maxSpeedValue');
+const collisionRotationChangeCheckbox = document.getElementById('collisionRotationChangeCheckbox');
+const restitutionSlider = document.getElementById('restitutionSlider');
+const restitutionValue = document.getElementById('restitutionValue');
+const frictionSlider = document.getElementById('frictionSlider');
+const frictionValue = document.getElementById('frictionValue');
+const rotationTransferSlider = document.getElementById('rotationTransferSlider');
+const rotationTransferValue = document.getElementById('rotationTransferValue');
+
 let isPlaying = true;
 let isVisible = true;
 let colorChangeMode = 'hue';
@@ -362,6 +381,119 @@ function loadPersistentData() {
         console.log('Spin collision detection chargé:', savedSpinCollisionDetection);
     } else {
         sendCommand('spinCollisionDetection', 'optimized');
+    }
+    
+    // Charger les paramètres Logo Collisions
+    const savedCollisionEnabled = localStorage.getItem('bpix-collisionEnabled');
+    if (savedCollisionEnabled !== null) {
+        collisionEnabledCheckbox.checked = savedCollisionEnabled === 'true';
+        sendCommand('collisionEnabled', savedCollisionEnabled);
+        console.log('Collision enabled chargé:', savedCollisionEnabled);
+    } else {
+        sendCommand('collisionEnabled', 'true'); // Enabled par défaut
+    }
+    
+    const savedCollisionMode = localStorage.getItem('bpix-collisionMode');
+    if (savedCollisionMode) {
+        collisionModeSelect.value = savedCollisionMode;
+        sendCommand('collisionMode', savedCollisionMode);
+        console.log('Collision mode chargé:', savedCollisionMode);
+    } else {
+        sendCommand('collisionMode', 'physics');
+    }
+    
+    const savedAntiStuckForce = localStorage.getItem('bpix-antiStuckForce');
+    if (savedAntiStuckForce) {
+        const force = parseFloat(savedAntiStuckForce);
+        antiStuckForceSlider.value = force;
+        antiStuckForceValue.textContent = force.toFixed(1);
+        sendCommand('antiStuckForce', force);
+        console.log('Anti-stuck force chargé:', force);
+    } else {
+        antiStuckForceValue.textContent = '2.0';
+        sendCommand('antiStuckForce', 2.0);
+    }
+    
+    const savedMinSepSpeed = localStorage.getItem('bpix-minimumSeparationSpeed');
+    if (savedMinSepSpeed) {
+        const speed = parseFloat(savedMinSepSpeed);
+        minimumSeparationSpeedSlider.value = speed;
+        minimumSeparationSpeedValue.textContent = speed.toFixed(1);
+        sendCommand('minimumSeparationSpeed', speed);
+        console.log('Minimum separation speed chargé:', speed);
+    } else {
+        minimumSeparationSpeedValue.textContent = '1.0';
+        sendCommand('minimumSeparationSpeed', 1.0);
+    }
+    
+    const savedMinimumSpeed = localStorage.getItem('bpix-minimumSpeedPercent');
+    if (savedMinimumSpeed) {
+        const percent = parseFloat(savedMinimumSpeed);
+        minimumSpeedSlider.value = percent;
+        minimumSpeedValue.textContent = Math.round(percent);
+        sendCommand('minimumSpeedPercent', percent / 100); // Convertir en 0-1
+        console.log('Minimum speed chargé:', percent + '%');
+    } else {
+        minimumSpeedValue.textContent = '30';
+        sendCommand('minimumSpeedPercent', 0.30);
+    }
+    
+    const savedMaxSpeed = localStorage.getItem('bpix-maxSpeedPercent');
+    if (savedMaxSpeed) {
+        const percent = parseFloat(savedMaxSpeed);
+        maxSpeedSlider.value = percent;
+        maxSpeedValue.textContent = percent >= 500 ? 'No Limit' : Math.round(percent);
+        sendCommand('maxSpeedPercent', percent >= 500 ? 0 : percent / 100);
+        console.log('Maximum speed chargé:', percent + '%');
+    } else {
+        maxSpeedValue.textContent = '300';
+        sendCommand('maxSpeedPercent', 3.0);
+    }
+    
+    const savedRotationChange = localStorage.getItem('bpix-collisionRotationChangeEnabled');
+    if (savedRotationChange !== null) {
+        const enabled = savedRotationChange === 'true';
+        collisionRotationChangeCheckbox.checked = enabled;
+        sendCommand('collisionRotationChangeEnabled', enabled);
+        console.log('Collision rotation change chargé:', enabled);
+    } else {
+        sendCommand('collisionRotationChangeEnabled', false); // Désactivé par défaut
+    }
+    
+    const savedRestitution = localStorage.getItem('bpix-restitutionCoefficient');
+    if (savedRestitution) {
+        const value = parseFloat(savedRestitution);
+        restitutionSlider.value = value;
+        restitutionValue.textContent = value.toFixed(2);
+        sendCommand('restitutionCoefficient', value);
+        console.log('Restitution coefficient chargé:', value);
+    } else {
+        restitutionValue.textContent = '0.95';
+        sendCommand('restitutionCoefficient', 0.95);
+    }
+    
+    const savedFriction = localStorage.getItem('bpix-frictionCoefficient');
+    if (savedFriction) {
+        const value = parseFloat(savedFriction);
+        frictionSlider.value = value;
+        frictionValue.textContent = value.toFixed(2);
+        sendCommand('frictionCoefficient', value);
+        console.log('Friction coefficient chargé:', value);
+    } else {
+        frictionValue.textContent = '0.10';
+        sendCommand('frictionCoefficient', 0.10);
+    }
+    
+    const savedRotationTransfer = localStorage.getItem('bpix-rotationTransferMultiplier');
+    if (savedRotationTransfer) {
+        const value = parseFloat(savedRotationTransfer);
+        rotationTransferSlider.value = value;
+        rotationTransferValue.textContent = value.toFixed(1);
+        sendCommand('rotationTransferMultiplier', value);
+        console.log('Rotation transfer multiplier chargé:', value);
+    } else {
+        rotationTransferValue.textContent = '1.0';
+        sendCommand('rotationTransferMultiplier', 1.0);
     }
 }
 
@@ -1001,6 +1133,87 @@ spinCollisionDetectionSelect.addEventListener('change', (e) => {
     const value = e.target.value;
     sendCommand('spinCollisionDetection', value);
     savePersistentData('bpix-spinCollisionDetection', value);
+});
+
+// ========================================
+// Gestion des contrôles Logo Collisions
+// ========================================
+
+// Enable collisions checkbox
+collisionEnabledCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('collisionEnabled', enabled.toString());
+    savePersistentData('bpix-collisionEnabled', enabled.toString());
+});
+
+// Collision mode select
+collisionModeSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
+    sendCommand('collisionMode', value);
+    savePersistentData('bpix-collisionMode', value);
+});
+
+// Anti-stuck force slider
+antiStuckForceSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    antiStuckForceValue.textContent = value.toFixed(1);
+    sendCommand('antiStuckForce', value);
+    savePersistentData('bpix-antiStuckForce', value.toString());
+});
+
+// Minimum separation speed slider
+minimumSeparationSpeedSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    minimumSeparationSpeedValue.textContent = value.toFixed(1);
+    sendCommand('minimumSeparationSpeed', value);
+    savePersistentData('bpix-minimumSeparationSpeed', value.toString());
+});
+
+// Minimum speed slider
+minimumSpeedSlider.addEventListener('input', (e) => {
+    const percent = parseInt(e.target.value);
+    minimumSpeedValue.textContent = percent;
+    sendCommand('minimumSpeedPercent', percent / 100); // Convertir en 0-1
+    savePersistentData('bpix-minimumSpeedPercent', percent.toString());
+});
+
+// Maximum speed slider
+maxSpeedSlider.addEventListener('input', (e) => {
+    const percent = parseInt(e.target.value);
+    maxSpeedValue.textContent = percent >= 500 ? 'No Limit' : percent;
+    sendCommand('maxSpeedPercent', percent >= 500 ? 0 : percent / 100);
+    savePersistentData('bpix-maxSpeedPercent', percent.toString());
+});
+
+// Collision rotation change checkbox
+collisionRotationChangeCheckbox.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    sendCommand('collisionRotationChangeEnabled', enabled);
+    savePersistentData('bpix-collisionRotationChangeEnabled', enabled.toString());
+});
+
+// Restitution coefficient slider
+restitutionSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    restitutionValue.textContent = value.toFixed(2);
+    sendCommand('restitutionCoefficient', value);
+    savePersistentData('bpix-restitutionCoefficient', value.toString());
+});
+
+// Friction coefficient slider
+frictionSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    frictionValue.textContent = value.toFixed(2);
+    sendCommand('frictionCoefficient', value);
+    savePersistentData('bpix-frictionCoefficient', value.toString());
+});
+
+// Rotation transfer multiplier slider
+rotationTransferSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    rotationTransferValue.textContent = value.toFixed(1);
+    sendCommand('rotationTransferMultiplier', value);
+    savePersistentData('bpix-rotationTransferMultiplier', value.toString());
 });
 
 // ========================================

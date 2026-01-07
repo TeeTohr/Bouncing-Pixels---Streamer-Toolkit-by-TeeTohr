@@ -47,7 +47,7 @@
 
             <!-- Number of Logos -->
             <div class="control-group">
-                <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color.">?</span>
+                <span class="info-icon info-icon-top-right" data-tooltip="Number of logos bouncing simultaneously. Each logo has its own position, direction, and color. High values (20+) may impact performance, especially with collisions enabled.">?</span>
                 <label for="logoCountInput">Number of Logos</label>
                 <div class="scale-controls">
                     <button id="logoCountDownBtn" class="btn btn-scale">−</button>
@@ -71,6 +71,12 @@
             <!-- Navigation vers sous-menu Image Spin -->
             <div class="control-group corner-effects-nav" data-submenu-nav="image-spin">
                 <label>Image Spin</label>
+                <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
+            </div>
+
+            <!-- Navigation vers sous-menu Logo Collisions -->
+            <div class="control-group corner-effects-nav" data-submenu-nav="logo-collisions">
+                <label>Logo Collisions</label>
                 <span class="nav-icon"><img src="sources/menu_arrow_blue.png" alt="→"></span>
             </div>
 
@@ -228,6 +234,105 @@ Unique: each logo has its own rotation parameters.">?</span>
                     <option value="optimized">Optimized (Default)</option>
                     <option value="precise">Precise</option>
                 </select>
+            </div>
+        </div>
+
+        <!-- Sous-menu Logo Collisions -->
+        <div class="tab-header" data-submenu-header="logo-collisions" style="display: none;">
+            <div class="corner-effects-header">
+                <button class="btn-back" data-submenu-back>
+                    <span class="back-icon"><img src="sources/menu_arrow.png" alt="←"></span>
+                    <span>Back</span>
+                </button>
+                <h3>Logo Collisions</h3>
+            </div>
+        </div>
+
+        <div class="tab-content" data-submenu-content="logo-collisions">
+            <div class="control-group">
+                <label for="collisionEnabledCheckbox">
+                    <input type="checkbox" id="collisionEnabledCheckbox" checked style="margin-right: 8px;">
+                    Enable Logo Collisions
+                </label>
+            </div>
+
+            <!-- Message informatif rotation -->
+            <div style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid #00d4ff; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.5;">
+                <strong>💡 Tip:</strong> For smoother and more logical collisions with rotation enabled, use <strong>"Random Direction on Bounce"</strong> or <strong>"Change to opposite direction on Bounce"</strong> instead of forcing Clockwise/Counterclockwise direction in the <strong>"Image Spin"</strong> section. Otherwise there are cases where logos will slide and stutter against each other.
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Simple: Logos exchange velocities (predictable, classic DVD behavior).
+Physics: Realistic elastic collision based on impact angle (more natural).">?</span>
+                <label for="collisionModeSelect">Collision Mode</label>
+                <select id="collisionModeSelect" class="mode-select">
+                    <option value="physics">Physics (Realistic)</option>
+                    <option value="simple">Simple</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Prevents logos from getting stuck together after collision. Increase if logos keep overlapping, decrease if they bounce too far apart. Only adjust if you notice collision issues.">?</span>
+                <label for="antiStuckForceSlider">Anti-Stuck Force: <span id="antiStuckForceValue">2.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="antiStuckForceSlider" min="0.5" max="5" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Minimum speed at which logos separate after collision. Prevents visual stuttering when logos slide against each other. Set to 0 for pure physics (may cause stuttering). Higher values = smoother separation.">?</span>
+                <label for="minimumSeparationSpeedSlider">Minimum Separation Speed: <span id="minimumSeparationSpeedValue">1.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="minimumSeparationSpeedSlider" min="0" max="3" step="0.1" value="1">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Logos slower than this percentage of base speed will gradually accelerate. Prevents logos from becoming too slow after multiple collisions. Set to 0% to disable.">?</span>
+                <label for="minimumSpeedSlider">Minimum Speed: <span id="minimumSpeedValue">30</span>%</label>
+                <div class="slider-container">
+                    <input type="range" id="minimumSpeedSlider" min="0" max="100" step="5" value="30">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Maximum speed limit as percentage of base speed. Prevents logos from becoming too fast after collisions. Set to maximum (500%) to disable the limit completely.">?</span>
+                <label for="maxSpeedSlider">Maximum Speed: <span id="maxSpeedValue">300</span>%</label>
+                <div class="slider-container">
+                    <input type="range" id="maxSpeedSlider" min="100" max="500" step="10" value="300">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="When enabled, logos with opposite rotations will change their rotation direction upon collision to prevent sliding/stuttering. Only works with 'Random on Bounce' or 'Opposite on Bounce' rotation modes. No effect with 'Clockwise' or 'Counter-clockwise' modes.">?</span>
+                <label for="collisionRotationChangeCheckbox">
+                    <input type="checkbox" id="collisionRotationChangeCheckbox" style="margin-right: 8px;">
+                    Change Rotation on Collision
+                </label>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls collision elasticity (bounciness). 1.0 = perfectly elastic (no energy loss), 0.8 = slightly damped, 0.5 = soft collisions with noticeable energy loss. Lower values make logos slow down after collisions.">?</span>
+                <label for="restitutionSlider">Restitution (Elasticity): <span id="restitutionValue">0.95</span></label>
+                <div class="slider-container">
+                    <input type="range" id="restitutionSlider" min="0.3" max="1.0" step="0.05" value="0.95">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Friction at collision contact point. 0.0 = frictionless (pure sliding), 0.2 = realistic friction, 0.5+ = logos 'grip' and transfer rotation. Affects how rotation and linear motion interact during collisions.">?</span>
+                <label for="frictionSlider">Friction: <span id="frictionValue">0.10</span></label>
+                <div class="slider-container">
+                    <input type="range" id="frictionSlider" min="0.0" max="0.8" step="0.05" value="0.10">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="info-icon info-icon-top-right" data-tooltip="Controls how much rotation is transferred during collisions. 1.0 = realistic physics, 0.5 = reduced rotation transfer (calmer), 2.0 = exaggerated rotation transfer (more dynamic). Affects both friction and angular momentum transfer.">?</span>
+                <label for="rotationTransferSlider">Rotation Transfer: <span id="rotationTransferValue">1.0</span></label>
+                <div class="slider-container">
+                    <input type="range" id="rotationTransferSlider" min="0.0" max="3.0" step="0.1" value="1.0">
+                </div>
             </div>
         </div>
 

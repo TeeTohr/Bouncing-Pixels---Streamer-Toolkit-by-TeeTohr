@@ -18,29 +18,37 @@ let imageNaturalRatio = 1;
 let logoCount = 1;
 let imageRendering = 'smooth';
 let cornerTolerance = 0.10; // Tolérance en secondes pour la détection des coins
+let minimumSpeedPercent = 0.30; // Vitesse minimale en % de la vitesse de base (0-1)
+let maxSpeedPercent = 3.0; // Vitesse maximale en % de la vitesse de base (0-5, défaut 3.0 = 300%)
+let currentImageSrc = 'images/default.png'; // Image source actuelle
 
 let lastCommand = null;
-const bounceCooldown = 100;
+const bounceCooldown = 50; // Réduit pour meilleure réactivité après collisions logo-logo
 
 // Tableau des logos
 let logos = [];
 
-// Créer un nouveau logo
+// ========================================
+// Créer un nouveau logo (version encapsulée)
+// ========================================
 function createLogo(index) {
     const logoWidth = scaleWidth;
     const logoHeight = scaleWidth / imageNaturalRatio;
     
-    const marginX = Math.max(20, logoWidth);
-    const marginY = Math.max(20, logoHeight);
-    
-    const maxX = Math.max(0, window.innerWidth - marginX);
-    const maxY = Math.max(0, window.innerHeight - marginY);
+    // Trouver une position sans overlap
+    const position = findNonOverlappingPosition(
+        logoWidth, 
+        logoHeight, 
+        logos, 
+        window.innerWidth, 
+        window.innerHeight
+    );
     
     const logo = {
         id: index,
         element: document.createElement('img'),
-        x: Math.random() * maxX + 10,
-        y: Math.random() * maxY + 10,
+        x: position.x,
+        y: position.y,
         dx: (Math.random() - 0.5) * 4,
         dy: (Math.random() - 0.5) * 4,
         width: logoWidth,
@@ -53,13 +61,16 @@ function createLogo(index) {
         timeLastHitBottom: 0,
         currentHue: Math.random() * 360,
         currentBrightness: 0.5 + Math.random(),
-        currentSolidColorIndex: Math.floor(Math.random() * solidColors.length)
+        currentSolidColorIndex: Math.floor(Math.random() * solidColors.length),
+        lastCollisionWith: {} // Pour le cooldown des collisions
     };
     
+    // Garantir une vitesse minimale
     if (Math.abs(logo.dx) < 1) logo.dx = logo.dx < 0 ? -2 : 2;
     if (Math.abs(logo.dy) < 1) logo.dy = logo.dy < 0 ? -2 : 2;
     
-    logo.element.src = 'images/default.png';
+    // Configurer l'élément image
+    logo.element.src = currentImageSrc; // Utiliser l'image actuelle !
     logo.element.alt = 'Bouncing Logo';
     logo.element.id = `bpix-logo-${index}`;
     logo.element.style.position = 'absolute';
@@ -235,6 +246,40 @@ function changeLogoColor(logo) {
     }
 }
 
+// ========================================
+// Appliquer la vitesse minimale
+// ========================================
+function applyMinimumSpeed(logo) {
+    if (minimumSpeedPercent <= 0) return; // Désactivé si 0%
+    
+    const minSpeed = speed * minimumSpeedPercent;
+    const currentSpeed = Math.sqrt(logo.dx * logo.dx + logo.dy * logo.dy);
+    
+    if (currentSpeed < minSpeed && currentSpeed > 0.01) {
+        // Accélération progressive (0.5% par frame)
+        const accelerationFactor = 1.005;
+        logo.dx *= accelerationFactor;
+        logo.dy *= accelerationFactor;
+    }
+}
+
+// ========================================
+// Appliquer la vitesse maximale
+// ========================================
+function applyMaxSpeed(logo) {
+    if (maxSpeedPercent <= 0) return; // Désactivé si 0%
+    
+    const maxSpeed = speed * maxSpeedPercent;
+    const currentSpeed = Math.sqrt(logo.dx * logo.dx + logo.dy * logo.dy);
+    
+    if (currentSpeed > maxSpeed) {
+        // Réduire la vitesse pour ne pas dépasser le maximum
+        const ratio = maxSpeed / currentSpeed;
+        logo.dx *= ratio;
+        logo.dy *= ratio;
+    }
+}
+
 // Réinitialiser les couleurs
 function resetAllColors() {
     logos.forEach(logo => {
@@ -245,6 +290,8 @@ function resetAllColors() {
 // Changer l'image
 function changeImage(imageName) {
     const newSrc = `images/${imageName}`;
+    currentImageSrc = newSrc; // Sauvegarder la source actuelle
+    
     logos.forEach(logo => {
         logo.element.src = newSrc;
     });
@@ -267,6 +314,9 @@ function animate() {
     // Mettre à jour la rotation globale (une seule fois par frame pour le mode "same")
     updateGlobalRotation(deltaTime);
     
+    // Vérifier et résoudre les collisions logo-logo AVANT les collisions mur
+    checkAndResolveCollisions(logos);
+    
     logos.forEach(logo => {
         // Mettre à jour la rotation
         updateLogoSpin(logo, deltaTime);
@@ -281,6 +331,12 @@ function animate() {
         // Déplacement (sans deltaTime pour garder le comportement original)
         logo.x += logo.dx * speed;
         logo.y += logo.dy * speed;
+        
+        // Appliquer la vitesse minimale
+        applyMinimumSpeed(logo);
+        
+        // Appliquer la vitesse maximale
+        applyMaxSpeed(logo);
 
         let bouncedHorizontal = false;
         let bouncedVertical = false;
@@ -439,14 +495,27 @@ function processCommand(action, value) {
             } catch (e) {}
             break;
         case 'reset':
-            logos.forEach(logo => {
-                logo.x = Math.random() * (window.innerWidth - logo.width);
-                logo.y = Math.random() * (window.innerHeight - logo.height);
+            // Repositionner tous les logos sans overlap
+            const resetLogos = [];
+            logos.forEach((logo, index) => {
+                const position = findNonOverlappingPosition(
+                    logo.width,
+                    logo.height,
+                    resetLogos,
+                    window.innerWidth,
+                    window.innerHeight
+                );
+                
+                logo.x = position.x;
+                logo.y = position.y;
                 logo.dx = (Math.random() - 0.5) * 4;
                 logo.dy = (Math.random() - 0.5) * 4;
                 if (Math.abs(logo.dx) < 1) logo.dx = logo.dx < 0 ? -2 : 2;
                 if (Math.abs(logo.dy) < 1) logo.dy = logo.dy < 0 ? -2 : 2;
+                logo.lastCollisionWith = {}; // Reset collision cooldowns
                 changeLogoColor(logo);
+                
+                resetLogos.push(logo);
             });
             isActive = true;
             try {
@@ -540,6 +609,45 @@ function processCommand(action, value) {
         case 'spinCollisionDetection':
             updateSpinSettings({ spinCollisionDetection: value }, logos);
             break;
+        case 'collisionEnabled':
+            updateCollisionSettings({ collisionEnabled: value === 'true' || value === true }, logos);
+            break;
+        case 'collisionMode':
+            updateCollisionSettings({ collisionMode: value }, logos);
+            break;
+        case 'antiStuckForce':
+            updateCollisionSettings({ antiStuckForce: parseFloat(value) }, logos);
+            break;
+        case 'minimumSeparationSpeed':
+            updateCollisionSettings({ minimumSeparationSpeed: parseFloat(value) }, logos);
+            break;
+        case 'minimumSpeedPercent':
+            minimumSpeedPercent = parseFloat(value);
+            break;
+        case 'maxSpeedPercent':
+            maxSpeedPercent = parseFloat(value);
+            break;
+        case 'minimumSpeedPercent':
+            minimumSpeedPercent = parseFloat(value);
+            break;
+        case 'maxSpeedPercent':
+            maxSpeedPercent = parseFloat(value);
+            break;
+        case 'restitutionCoefficient':
+            updateCollisionSettings({ restitutionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'frictionCoefficient':
+            updateCollisionSettings({ frictionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'restitutionCoefficient':
+            updateCollisionSettings({ restitutionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'frictionCoefficient':
+            updateCollisionSettings({ frictionCoefficient: parseFloat(value) }, logos);
+            break;
+        case 'rotationTransferMultiplier':
+            updateCollisionSettings({ rotationTransferMultiplier: parseFloat(value) }, logos);
+            break;
     }
 }
 
@@ -587,6 +695,9 @@ function loadInitialCommands() {
     
     // Charger les paramètres de rotation
     loadSpinSettings();
+    
+    // Charger les paramètres de collision
+    loadCollisionSettings();
     
     if (savedLogoCount) {
         processCommand('logoCount', parseInt(savedLogoCount));
