@@ -1,4 +1,4 @@
-# Bouncing Pixels - Streamer Toolkit by TeeTohr
+# RIAS - Rebounding Icon Automated for Streams
 
 ## Installation
 
@@ -7,10 +7,10 @@
 
 ## Adding to OBS
 
-#### Step 1: Add the Bouncing Pixels Source
+#### Step 1: Add the RIAS Source
 1. In OBS, add a new Browser Source
-2. Name it whatever you want (e.g. "Bouncing Pixels", etc.)
-3. Set the path of the BouncingImage.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\BouncingImage.html) (do not Check "Local file")
+2. Name it whatever you want (e.g. "RIAS", etc.)
+3. Set the path of the BouncingImage.html file as the URL (e.g. C:\OBS\SETUP\RIAS - Rebounding Icon Automated for Streams\BouncingImage.html) (do not Check "Local file")
 4. Set dimensions (recommended: dimensions of your canvas size)
 5. IMPORTANT: Check "Shutdown source when not visible" to prevent performance issues
     - Leave it unchecked if you want to "save" the images position/rotation/etc when coming back to the scene though this may cost some performance
@@ -18,8 +18,8 @@
 
 #### Step 2: Add the Control Dock
 1. In OBS menu, go to Docks → Custom Browser Docks
-2. Dock Name: "Bouncing Pixels" (or any name you prefer)
-3. Set the path of the Dock.html file as the URL (e.g. C:\OBS\SETUP\Bouncing Pixels - Streamer Toolkit by TeeTohr\Dock.html)
+2. Dock Name: "RIAS" (or any name you prefer)
+3. Set the path of the Dock.html file as the URL (e.g. C:\OBS\SETUP\RIAS - Rebounding Icon Automated for Streams\Dock.html)
 4. Click "Apply"
 5. The control dock should appear - you can dock it anywhere in OBS
 

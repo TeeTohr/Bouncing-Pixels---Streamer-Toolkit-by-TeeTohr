@@ -737,4 +737,4 @@ setInterval(checkCommands, 100);
 loadInitialCommands();
 animate();
 
-sendLog('🎬 Bouncing Pixels initialisé');
+sendLog('🎬 RIAS initialisé');
