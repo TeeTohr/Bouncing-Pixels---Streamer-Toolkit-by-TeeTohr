@@ -1,0 +1,156 @@
+RIAS — Notes spécifiques (configurateur Python + dock OBS)
+===========================================================
+
+Contexte
+--------
+
+RIAS est un cas mixte : Python sert de configurateur (gestion des
+fichiers utilisateur — images, sons, effets visuels), le dock OBS sert
+de panneau de contrôle runtime (vitesses, start/stop, sélection des
+effets existants).
+
+Le dock ne peut pas écrire sur le filesystem (sandbox OBS / browser).
+Il ne peut donc que LIRE les fichiers que Python a préparés. La
+communication Python → dock se fait via un fichier manifeste statique
+sur disque, lu par fetch() dans le dock JS.
+
+
+Architecture des fichiers utilisateur
+-------------------------------------
+
+Deux catégories à bien séparer dans la tête et dans le code :
+
+  1. Fichiers TEMPLATE (shippés dans la release GitHub)
+     - code, theme.css, fonts, icônes d'app, dock.html, popup.js, etc.
+     - Présents dans le repo, présents dans dist/release/, parsables
+       automatiquement par le futur résolveur de dépendances.
+
+  2. Fichiers UTILISATEUR (créés à l'installation)
+     - Images, sons, effets ajoutés par l'utilisateur via le
+       configurateur Python.
+     - N'existent pas au moment du build, n'ont rien à faire dans
+       dist/release/.
+     - La release shippera juste un dossier assets/ vide (.gitkeep ou
+       équivalent) et un manifest.json vide ou exemple.
+
+
+Le manifest.json
+----------------
+
+Rôle : pont entre Python (qui ajoute/supprime des fichiers utilisateur)
+et le dock JS (qui doit savoir quels fichiers existent à l'instant t).
+
+Format suggéré (à finaliser au moment du dev RIAS) :
+
+  {
+    "version": 1,
+    "updated_at": "2026-04-10T15:30:00Z",
+    "images": [
+      { "id": "logo_v2", "file": "assets/images/logo_v2.png", "size": [256, 256] },
+      { "id": "sponsor", "file": "assets/images/sponsor.png", "size": [512, 256] }
+    ],
+    "sounds": [
+      { "id": "bounce_1", "file": "assets/sounds/bounce_1.wav" }
+    ],
+    "effects": [
+      { "id": "glow_purple", "type": "glow", "color": "#8b2fc9" }
+    ]
+  }
+
+Workflow :
+  - Python (configurateur) écrit/met à jour manifest.json à chaque
+    modification (atomic write — temp file + rename).
+  - Le dock JS poll manifest.json toutes les N secondes (ou recharge
+    à la demande via un bouton Refresh) et reconstruit son UI à partir
+    du contenu.
+  - Pas de communication temps réel Python ↔ dock — le manifest est
+    la seule source de vérité partagée.
+
+Pourquoi pas localStorage ? Parce que Python ne peut pas y écrire
+(c'est du browser-side). Le manifest.json est le pont neutre.
+
+
+Intégration avec le résolveur dock_release.conf
+------------------------------------------------
+
+Cas piégeux : manifest.json est lu par fetch() en JS, donc le futur
+résolveur de dépendances HTML/CSS ne le trouvera JAMAIS automatiquement.
+
+Solution : il va dans l'allowlist statique de dock_release.conf pour
+RIAS, avec une entrée explicite :
+
+  # dock_release.conf (RIAS)
+  # ── Allowlist : fichiers chargés dynamiquement en JS, non parseables ──
+  manifest.json
+  assets/        # dossier vide à l'install, peuplé au runtime par le
+                 # configurateur Python
+
+Le résolveur récupère tout le reste (theme.css, popup.js, dock-nav.js,
+fonts via @font-face, etc.) à partir du parse de dock.html.
+
+
+Protection à ajouter dans prepare_release.py pour RIAS
+------------------------------------------------------
+
+À implémenter au moment du build de RIAS (à reporter dans la todo
+RIAS, pas dans le socle générique) :
+
+  - Vérifier que assets/ ne contient AUCUN fichier utilisateur de dev
+    avant de zipper. Si Python a ajouté des images de test pendant le
+    développement, elles ne doivent pas se retrouver dans le zip
+    publié.
+  - Vérifier que manifest.json est vide ou contient un exemple
+    minimal (pas de références aux fichiers de dev de T).
+  - Comportement : erreur bloquante (même logique que config.json non
+    vide ou logs/ non propres dans le socle actuel).
+
+Checklist mentale pour la release RIAS :
+  [ ] assets/ vidé de tout contenu de dev
+  [ ] manifest.json reset (vide ou exemple)
+  [ ] Vérifier que le dock se lance avec un manifest vide sans crash
+  [ ] Vérifier que le configurateur Python crée correctement les
+      premières entrées du manifest
+
+
+Points à valider au moment du dev
+----------------------------------
+
+  - Format exact du manifest (champs, naming, validation côté JS)
+  - Stratégie de polling vs reload manuel côté dock
+    (recommandation : reload manuel via bouton + auto-reload sur
+     focus de la fenêtre OBS dock)
+  - Gestion des erreurs si manifest.json est corrompu ou absent
+    (le dock doit afficher un état "no assets" propre, pas crasher)
+  - Si plusieurs configurateurs Python tournent en parallèle (cas
+    edge mais possible), gérer le verrou d'écriture du manifest
+  - Décider si les fichiers utilisateur sont stockés en chemins
+    relatifs (préférable, portable) ou absolus dans le manifest
+
+
+À ne PAS faire au début
+-----------------------
+
+  - Pas de format binaire pour le manifest — JSON simple, lisible,
+    debuggable à la main
+  - Pas de système de migration de schéma au début — version: 1 et
+    on verra si on en a besoin
+  - Pas de watcher filesystem côté dock — polling simple ou reload
+    manuel suffisent largement pour ce use case
+  - Pas de communication WebSocket / IPC custom Python ↔ dock —
+    le fichier manifest est largement suffisant et ajoute zéro
+    complexité d'infrastructure
+
+
+Lien avec le chantier socle
+----------------------------
+
+Tout ça ne change RIEN au socle générique. Le socle continue de
+supposer "fichiers template parseables + allowlist courte". RIAS est
+juste un cas où l'allowlist comporte 2 entrées au lieu de 0.
+
+À implémenter dans cet ordre :
+  1. D'abord : finir migration PyQt6 du socle (chantier 1 des notes
+     principales) et nettoyage CSS Chromium 83 derrière.
+  2. Puis : auto-génération dock_release.conf dans le socle (chantier 3).
+  3. Enfin : démarrer RIAS sur le socle migré, avec ses 2 entrées
+     d'allowlist spécifiques.
